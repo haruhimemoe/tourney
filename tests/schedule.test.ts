@@ -98,6 +98,16 @@ describe("checkReschedule", () => {
     expect(checkReschedule(match, to, rules, now)).toEqual({ ok: true, value: to });
   });
 
+  it("refuses invalid rules", () => {
+    const to = new Date("2026-08-07T18:00:00Z");
+    expect(checkReschedule(match, to, { ...rules, maxReschedules: Number.NaN }, now)).toMatchObject(
+      { error: { code: "bad-input" } },
+    );
+    expect(checkReschedule(match, to, { ...rules, minNoticeHours: -1 }, now)).toMatchObject({
+      error: { code: "bad-input" },
+    });
+  });
+
   it.each<[string, Partial<Scheduled> | null, string, string]>([
     ["not scheduled", { status: "done" }, "2026-08-07T18:00:00Z", "bad-state"],
     ["bad date", null, "nope", "bad-input"],

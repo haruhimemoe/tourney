@@ -42,7 +42,10 @@ export const reportResult = (
   if (!match.ok) return match;
   const winner = checkScore(match.value.bestOf, score.scoreA, score.scoreB);
   if (!winner.ok) return winner;
-  return ok(replace(bracket, { ...match.value, ...score, status: "done", winner: winner.value }));
+  const { scoreA, scoreB } = score;
+  return ok(
+    replace(bracket, { ...match.value, scoreA, scoreB, status: "done", winner: winner.value }),
+  );
 };
 
 /**
@@ -65,17 +68,21 @@ export const reportForfeit = (bracket: Bracket, code: string, winner: Side): Res
  * @param bracket {Bracket} the bracket
  * @param code {string} a played or forfeited match
  * @returns {Result<Bracket>} the bracket with the match ready again and later sides emptied, or
- *          not-found, bad-state (no result to clear, e.g. a bye) or out-of-order (a match fed by
- *          this one already has a result; clear that first)
+ *          not-found, bad-state (no result to clear, e.g. a bye) or out-of-order (a later match
+ *          fed by this one, directly or through byes, has a result; clear that first)
  */
 export const clearResult = (bracket: Bracket, code: string): Result<Bracket> => {
   const match = bracket.matches.find((m) => m.code === code);
   if (!match) return fail("not-found", `no match ${code}`);
   if (!hasResult(match)) return fail("bad-state", `${code} has no result`);
-  const fedBy = (side: BracketMatch["a"]) =>
-    side.source.kind !== "seed" && side.source.match === code;
-  const blocking = bracket.matches.find((m) => (fedBy(m.a) || fedBy(m.b)) && hasResult(m));
-  if (blocking) return fail("out-of-order", `clear ${blocking.code} first`);
+  // Walk everything fed by this match, through byes and unplayed matches.
+  const reach = new Set([code]);
+  for (const m of bracket.matches) {
+    const fed = [m.a, m.b].some((s) => s.source.kind !== "seed" && reach.has(s.source.match));
+    if (!fed) continue;
+    if (hasResult(m)) return fail("out-of-order", `clear ${m.code} first`);
+    reach.add(m.code);
+  }
   const next = { ...match, status: "pending" as const, scoreA: null, scoreB: null, winner: null };
   return ok(replace(bracket, next));
 };

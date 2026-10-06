@@ -50,6 +50,22 @@ describe("rankQualifiers", () => {
     expect(rankQualifiers([], "sum")).toEqual([]);
   });
 
+  it("treats non-finite scores as missing", () => {
+    const ranked = rankQualifiers(
+      [
+        { entrantId: "a", scores: [Number.NaN] },
+        { entrantId: "b", scores: [5] },
+        { entrantId: "c", scores: [Number.POSITIVE_INFINITY] },
+      ],
+      "sum",
+    );
+    expect(ranked.map((r) => [r.entrantId, r.value])).toEqual([
+      ["b", 5],
+      ["a", 0],
+      ["c", 0],
+    ]);
+  });
+
   it("gives equal map scores the same rank", () => {
     const ranked = rankQualifiers(
       [

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-06
+
 ### Added
 
 - Round ladders for single and double elimination (`buildLadder`): RO/QF/SF/F, losers rounds, grand final with optional reset, qualifiers, best-of per round.
@@ -17,3 +19,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Captain drafts: snake or linear order, the clock, picks, deadlines.
 - Tournaments with phases and a registration window; registrations with review, role conflicts and caps.
 - Scheduling through `@haruhimemoe/time` (`suggestMatchTimes`) and reschedule rules (`checkReschedule`).
+
+[Unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/haruhimemoe/tourney/releases/tag/v0.1.0

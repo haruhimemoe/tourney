@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { createBracket } from "../src/bracket.js";
+import { createBracket, settleBracket } from "../src/bracket.js";
 import {
   champion,
   clearResult,
@@ -129,6 +129,51 @@ describe("grand final", () => {
     const gfr = reset.matches.find((m) => m.round === "GFR")?.code as string;
     const played = unwrap(reportResult(reset, gfr, { scoreA: 4, scoreB: 0 }));
     expect(clearResult(played, gf)).toMatchObject({ ok: false, error: { code: "out-of-order" } });
+  });
+});
+
+describe("review regressions", () => {
+  it("blocks a clear that would orphan a result past a losers bye", () => {
+    // 5 in double, Bo1: M7 (LR1) is a bye fed by M2's loser; M9 (LR2) is fed by M7.
+    let b = unwrap(createBracket({ entrants: entrants(5), format: "double", bestOf: 1 }));
+    b = unwrap(reportResult(b, "M6", { scoreA: 1, scoreB: 0 }));
+    b = unwrap(reportResult(b, "M2", { scoreA: 1, scoreB: 0 }));
+    b = unwrap(reportResult(b, "M9", { scoreA: 1, scoreB: 0 }));
+    expect(clearResult(b, "M2")).toMatchObject({ ok: false, error: { code: "out-of-order" } });
+  });
+
+  it("drops a stored result whose sides are no longer known", () => {
+    let b = unwrap(createBracket({ entrants: entrants(4), format: "single", bestOf: 1 }));
+    b = unwrap(reportResult(b, "M1", { scoreA: 1, scoreB: 0 }));
+    b = unwrap(reportResult(b, "M2", { scoreA: 1, scoreB: 0 }));
+    b = unwrap(reportResult(b, "M3", { scoreA: 1, scoreB: 0 }));
+    const edited = settleBracket({
+      ...b,
+      matches: b.matches.map((m) =>
+        m.code === "M1" ? { ...m, status: "ready", winner: null, scoreA: null, scoreB: null } : m,
+      ),
+    });
+    expect(edited.matches[2]).toMatchObject({
+      status: "pending",
+      winner: null,
+      a: { settled: false },
+    });
+    expect(settleBracket(edited)).toEqual(edited);
+  });
+
+  it("only takes the two scores from the score object", () => {
+    const b = unwrap(createBracket({ entrants: entrants(4), format: "single", bestOf: 3 }));
+    const next = unwrap(
+      reportResult(b, "M1", { scoreA: 2, scoreB: 0, code: "M3" } as {
+        scoreA: number;
+        scoreB: number;
+      }),
+    );
+    expect(next.matches.map((m) => [m.code, m.status])).toEqual([
+      ["M1", "done"],
+      ["M2", "ready"],
+      ["M3", "pending"],
+    ]);
   });
 });
 

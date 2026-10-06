@@ -1,6 +1,6 @@
 {
   "name": "@haruhimemoe/tourney",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "osu! tournaments as data: zod schemas and pure functions for tournaments, brackets, matches, pick/ban logs, teams, drafts, registration and scheduling.",
   "keywords": [
     "osu",

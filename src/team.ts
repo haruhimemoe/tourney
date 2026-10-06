@@ -63,9 +63,12 @@ export const checkSideRules = (rules: SideRules): Result<SideRules> => {
  * @param team {Team} a team
  * @param rules {SideRules} the tournament's side rules
  * @returns {Result<Team>} the team, or bad-side naming the first broken rule: captain not on the
- *          roster, a player listed twice, roster or subs outside their limits
+ *          roster, a player listed twice, roster or subs outside their limits; bad-input when the
+ *          rules themselves fail checkSideRules
  */
 export const checkTeam = <T extends Team>(team: T, rules: SideRules): Result<T> => {
+  const valid = checkSideRules(rules);
+  if (!valid.ok) return valid;
   if (!team.roster.includes(team.captainId)) {
     return fail("bad-side", "the captain is not on the roster");
   }
@@ -114,11 +117,12 @@ export const teamNameKey = (name: string): string => name.trim().replace(/\s+/g,
  * @function uniqueTeamName
  * @param name {string} the wanted name
  * @param taken {Iterable<string>} names already used
- * @returns {string} the name, or the name with " 2", " 3" and so on, cut to fit 32 characters
+ * @returns {string} the name (or "Team" when blank), or with " 2", " 3" and so on, cut to fit
+ *          32 characters
  */
 export const uniqueTeamName = (name: string, taken: Iterable<string>): string => {
   const used = new Set([...taken].map(teamNameKey));
-  const base = name.trim().replace(/\s+/g, " ").slice(0, MAX_TEAM_NAME);
+  const base = name.trim().replace(/\s+/g, " ").slice(0, MAX_TEAM_NAME) || "Team";
   if (!used.has(teamNameKey(base))) return base;
   for (let n = 2; ; n++) {
     const suffix = ` ${n}`;

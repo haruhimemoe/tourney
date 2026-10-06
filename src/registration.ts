@@ -119,7 +119,8 @@ export const checkRoleConflicts = (
  * @param counts {{ players: number; staff: number }} live registrations so far (not withdrawn or
  *        rejected)
  * @param now {Date} the current time
- * @returns {Result<true>} ok, or closed (outside the window) or limit (the cap is reached)
+ * @returns {Result<true>} ok, or bad-input (bad counts), closed (outside the window) or limit
+ *          (the cap is reached)
  */
 export const canRegister = (
   tournament: Tournament,
@@ -127,6 +128,9 @@ export const canRegister = (
   counts: { players: number; staff: number },
   now: Date,
 ): Result<true> => {
+  if (![counts.players, counts.staff].every((n) => Number.isInteger(n) && n >= 0)) {
+    return fail("bad-input", "counts are whole numbers from 0");
+  }
   if (!isRegistrationOpen(tournament, now)) return fail("closed", "registration is closed");
   const cap =
     kind === "player" ? tournament.registration.playerCap : tournament.registration.staffCap;

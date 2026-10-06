@@ -41,7 +41,7 @@ if (next.ok) bracket = next.value;
 champion(bracket); // null until the last final is played
 ```
 
-Every function returns `{ ok: true, value }` or `{ ok: false, error: { code, message } }` and never mutates its input. Codes: `bad-input`, `bad-state`, `bad-side`, `bad-score`, `bad-slot`, `out-of-order`, `limit`, `not-found`, `closed`.
+Functions that can refuse return `{ ok: true, value }` or `{ ok: false, error: { code, message } }`. None of them mutate their input. Codes: `bad-input`, `bad-state`, `bad-side`, `bad-score`, `bad-slot`, `out-of-order`, `limit`, `not-found`, `closed`.
 
 ## Entrants and sides
 
@@ -52,10 +52,10 @@ The bracket and matches name one **entrant** per side: in a 1v1 tourney the play
 | Function | Does |
 | --- | --- |
 | `checkSideRules(rules)` | refuses rules that can't be met |
-| `checkTeam(team, rules)` | captain on the roster, nobody twice, roster and subs in range |
+| `checkTeam(team, rules)` | valid rules, captain on the roster, nobody twice, roster and subs in range |
 | `checkLineup(team, lineup, rules)` | right size, no repeats, everyone on the roster or subs |
 | `teamNameKey(name)` | trimmed, collapsed, lower-case name for comparing |
-| `uniqueTeamName(name, taken)` | `name`, or `name 2`, `name 3`, cut to 32 characters |
+| `uniqueTeamName(name, taken)` | `name` ("Team" when blank), or `name 2`, `name 3`, cut to 32 characters |
 
 ## Ladders
 
@@ -91,16 +91,16 @@ Seeds are placed in standard order (1 and 2 can only meet in the final). In doub
 | --- | --- |
 | `reportResult(bracket, code, { scoreA, scoreB })` | a `ready` match; the winner must reach `ceil(bestOf / 2)` |
 | `reportForfeit(bracket, code, winner)` | a `ready` match, decided without scores |
-| `clearResult(bracket, code)` | undoes a result; refused while a later match fed by it has one |
+| `clearResult(bracket, code)` | undoes a result; refused while a later match fed by it (directly or through byes) has one |
 | `champion(bracket)` | the winner of the last final played, else null |
 | `matchesFor(bracket, id)` / `nextMatch(bracket, id)` | an entrant's matches / their `ready` match |
-| `settleBracket(bracket)` | refills sides and statuses after you edit a bracket by hand |
+| `settleBracket(bracket)` | refills sides and statuses after you edit a bracket by hand; drops a result whose players are no longer known |
 
 `BracketSchema` parses a stored bracket.
 
 ## Seeding
 
-- `rankQualifiers(rows, method)`: rows are `{ entrantId, scores }`, one score per qualifier map, `null` for no score. `"sum"` ranks by total score. `"average-rank"` ranks by mean rank per map (null ranks last). Equal values keep input order and come back with `tied: true`.
+- `rankQualifiers(rows, method)`: rows are `{ entrantId, scores }`, one score per qualifier map, `null` (or a non-finite number) for no score. `"sum"` ranks by total score. `"average-rank"` ranks by mean rank per map (null ranks last). Equal values keep input order and come back with `tied: true`.
 - `seedPositions(n)`: the standard first-round order for `n` (a power of two), e.g. `1, 8, 4, 5, 2, 7, 3, 6`.
 
 ## Matches
@@ -139,9 +139,11 @@ checkPickBans(log, {
 It replays the log and returns `{ protected, banned, picked, tiebreaker, remaining, next }`. `next` is whose turn it is and what to do, for a referee view. It is null once the tiebreaker is played or, with `score`, once a side has won. The log is refused when:
 
 - a slot is not in the pool, or not free (`bad-slot`)
-- a protect comes after a ban or pick, or a side acts out of turn (`out-of-order`)
+- an entry is out of phase (every protect, then every ban, then picks) or out of turn (`out-of-order`)
 - a side goes over its protects or bans, or there are more than `bestOf - 1` picks (`limit`)
 - a side bans a protected slot (its own or the other side's) (`bad-slot`). Protected slots can still be picked.
+- with `score` given and a side already through, there are more picks than maps played (`bad-state`)
+- the rules, best-of or first turns are invalid (`bad-input`)
 - the tiebreaker is used anywhere but as one last entry with no side, after `bestOf - 1` picks, at a tie when `score` is given (`bad-state`)
 
 ## Drafts

@@ -83,17 +83,34 @@ describe("checkPickBans", () => {
     expect(unwrap(checkPickBans([], ctx)).next).toEqual({ side: "b", action: "protect" });
   });
 
-  it("allows split ban phases and picking a protected slot", () => {
-    const ctx = { ...CTX, rules: { ...CTX.rules, protects: 0, bans: 2 } };
-    const log = [
-      p("a", "ban", K("DT", 1)),
-      p("b", "ban", K("HR", 1)),
-      p("b", "pick", K("NM", 1)),
-      p("a", "ban", K("DT", 2)),
-    ];
-    expect(unwrap(checkPickBans(log, ctx)).next).toEqual({ side: "b", action: "ban" });
+  it("runs protects, then bans, then picks, and allows picking a protected slot", () => {
     const own = [...FULL.slice(0, 4), p("b", "pick", K("HD", 1))];
     expect(checkPickBans(own, CTX).ok).toBe(true);
+    expect(checkPickBans([p("a", "ban", K("NM", 2))], CTX)).toMatchObject({
+      error: { code: "out-of-order" },
+    });
+    expect(checkPickBans([...FULL.slice(0, 3), p("b", "pick", K("NM", 2))], CTX)).toMatchObject({
+      error: { code: "out-of-order" },
+    });
+  });
+
+  it("refuses picks past the maps played once a side has won", () => {
+    expect(checkPickBans(FULL.slice(0, 8), { ...CTX, score: { a: 4, b: 0 } }).ok).toBe(true);
+    expect(checkPickBans(FULL.slice(0, 9), { ...CTX, score: { a: 4, b: 0 } })).toMatchObject({
+      error: { code: "bad-state" },
+    });
+  });
+
+  it.each<[string, Partial<PickBanContext>]>([
+    ["NaN best-of", { bestOf: Number.NaN }],
+    ["even best-of", { bestOf: 4 }],
+    ["NaN bans", { rules: { protects: 1, bans: Number.NaN, tiebreaker: null } }],
+    ["negative protects", { rules: { protects: -1, bans: 1, tiebreaker: null } }],
+    ["bad first side", { first: { ban: "x" as "a", pick: "b" } }],
+  ])("refuses %s as bad-input", (_, change) => {
+    expect(checkPickBans([], { ...CTX, ...change })).toMatchObject({
+      error: { code: "bad-input" },
+    });
   });
 
   it("stops at the score and only allows the tiebreaker at a tie", () => {
@@ -196,12 +213,6 @@ describe("checkPickBans", () => {
     ["ban a protect", [...FULL.slice(0, 2), p("a", "ban", K("HD", 1))], {}, "bad-slot"],
     ["ban own protect", [...FULL.slice(0, 2), p("a", "ban", K("NM", 1))], {}, "bad-slot"],
     ["ban twice", [...FULL.slice(0, 3), p("b", "ban", K("DT", 1))], {}, "bad-slot"],
-    [
-      "ban a pick",
-      [p("b", "pick", K("NM", 1)), p("a", "ban", K("NM", 1))],
-      { rules: { protects: 0, bans: 1, tiebreaker: null } },
-      "bad-slot",
-    ],
     ["wrong pick turn", [...FULL.slice(0, 4), p("a", "pick", K("NM", 2))], {}, "out-of-order"],
     ["pick a ban", [...FULL.slice(0, 4), p("b", "pick", K("DT", 1))], {}, "bad-slot"],
     ["pick twice", [...FULL.slice(0, 5), p("a", "pick", K("NM", 1))], {}, "bad-slot"],

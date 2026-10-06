@@ -7,7 +7,7 @@
  * @modified Tue Oct 6, 2026
  */
 
-/** One entrant's qualifier scores, one per map; null when they have no score on it. */
+/** One entrant's qualifier scores, one per map; null (or a non-finite number) when they have no score on it. */
 export type QualifierRow = { entrantId: string; scores: readonly (number | null)[] };
 
 /** A ranked entrant. `tied` is true when its value equals a neighbour's (order then follows input). */
@@ -16,8 +16,11 @@ export type QualifierSeed = { entrantId: string; seed: number; value: number; ti
 /** How qualifier rows are ranked. */
 export type QualifierMethod = "sum" | "average-rank";
 
+const finite = (score: number | null | undefined): number | null =>
+  typeof score === "number" && Number.isFinite(score) ? score : null;
+
 const mapRanks = (rows: readonly QualifierRow[], map: number): number[] => {
-  const scores = rows.map((row) => row.scores[map] ?? null);
+  const scores = rows.map((row) => finite(row.scores[map]));
   return scores.map((score) => {
     if (score === null) return rows.length;
     return 1 + scores.filter((other) => other !== null && other > score).length;
@@ -39,7 +42,7 @@ export const rankQualifiers = (
   const ranks = Array.from({ length: maps }, (_, map) => mapRanks(rows, map));
   const values = rows.map((row, i) =>
     method === "sum"
-      ? row.scores.reduce<number>((sum, score) => sum + (score ?? 0), 0)
+      ? row.scores.reduce<number>((sum, score) => sum + (finite(score) ?? 0), 0)
       : maps === 0
         ? 0
         : ranks.reduce((sum, list) => sum + (list[i] as number), 0) / maps,

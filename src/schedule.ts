@@ -69,9 +69,12 @@ export const suggestMatchTimes = (opts: SuggestOptions): Result<SlotCandidate[]>
 export const RescheduleRulesSchema = z.object({
   /** New times must fall in [start, end). */
   window: z.object({ start: z.date(), end: z.date() }),
-  maxReschedules: z.number().int().min(0),
+  maxReschedules: z.number().int().min(0).max(1000),
   /** Hours before both the old and the new time that a request must come in. */
-  minNoticeHours: z.number().min(0),
+  minNoticeHours: z
+    .number()
+    .min(0)
+    .max(24 * 365),
 });
 
 /** Reschedule rules. */
@@ -83,7 +86,7 @@ export type RescheduleRules = z.infer<typeof RescheduleRulesSchema>;
  * @param to {Date} the proposed time
  * @param rules {RescheduleRules} the round's rules
  * @param now {Date} the current time
- * @returns {Result<Date>} the time, or bad-state (match not scheduled), bad-input (bad date or
+ * @returns {Result<Date>} the time, or bad-input (rules fail RescheduleRulesSchema), bad-state (match not scheduled), bad-input (bad date or
  *          outside the window), closed (too close to the old or new time) or limit (too many; an entry
  *          with no `from`, the first scheduling, doesn't count)
  */
@@ -93,6 +96,7 @@ export const checkReschedule = (
   rules: RescheduleRules,
   now: Date,
 ): Result<Date> => {
+  if (!RescheduleRulesSchema.safeParse(rules).success) return fail("bad-input", "invalid rules");
   if (match.status !== "scheduled") return fail("bad-state", `the match is ${match.status}`);
   const t = to.getTime();
   if (Number.isNaN(t) || Number.isNaN(now.getTime())) return fail("bad-input", "invalid date");

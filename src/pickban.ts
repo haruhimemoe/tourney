@@ -11,6 +11,7 @@
 import { type SlotBucket, slotKey } from "@haruhimemoe/pool";
 import { z } from "zod";
 import { otherSide, type Side } from "./ids.js";
+import { MAX_BEST_OF } from "./ladder.js";
 import { type PickBanEntry, winsNeeded } from "./match.js";
 import { fail, ok, type Result } from "./result.js";
 
@@ -47,22 +48,31 @@ export type PickBanState = {
   next: { side: Side | null; action: PickBanEntry["action"] } | null;
 };
 
+const isBestOf = (n: number): boolean =>
+  Number.isInteger(n) && n >= 1 && n <= MAX_BEST_OF && n % 2 === 1;
+
 const turn = (first: Side, count: number): Side => (count % 2 === 0 ? first : otherSide(first));
 
 /**
  * @function checkPickBans
  * @param log {readonly PickBanEntry[]} entries in order
  * @param ctx {PickBanContext} pool, rules, best-of, first turns and optionally the score
- * @returns {Result<PickBanState>} the state, or the first broken rule: bad-slot (not in the pool,
- *          or not available), bad-side, out-of-order (wrong side, or a protect after a ban),
+ * @returns {Result<PickBanState>} the state, or the first broken rule: bad-input (rules, best-of
+ *          or first turns invalid), bad-slot (not in the pool, or not available), bad-side,
+ *          out-of-order (wrong side, or out of phase: all protects, then all bans, then picks),
  *          limit (too many protects, bans or picks) or bad-state (tiebreaker misuse, or anything
- *          after the tiebreaker)
+ *          after the tiebreaker, or more picks than maps played once a side has won)
  */
 export const checkPickBans = (
   log: readonly PickBanEntry[],
   ctx: PickBanContext,
 ): Result<PickBanState> => {
   const { rules, bestOf, first } = ctx;
+  const sides = [first.ban, first.pick, first.protect ?? first.ban];
+  if (!PickBanRulesSchema.safeParse(rules).success) return fail("bad-input", "invalid rules");
+  if (!isBestOf(bestOf)) return fail("bad-input", "best-of must be an odd number from 1 to 25");
+  if (!sides.every((s) => s === "a" || s === "b"))
+    return fail("bad-input", "first turns are a or b");
   const keys = new Set(ctx.pool.slots.map(slotKey));
   const tb = rules.tiebreaker;
   if (tb !== null && !keys.has(tb)) return fail("bad-slot", `tiebreaker ${tb} is not in the pool`);
@@ -79,6 +89,10 @@ export const checkPickBans = (
   const picked = () => state.picked.map((p) => p.slot);
   const need = winsNeeded(bestOf);
   const tied = !ctx.score || (ctx.score.a === need - 1 && ctx.score.b === need - 1);
+  const won = !!ctx.score && (ctx.score.a >= need || ctx.score.b >= need);
+  const protectsLeft = () =>
+    state.protected.a.length + state.protected.b.length < rules.protects * 2;
+  const bansLeft = () => banned().length < rules.bans * 2;
 
   for (const [i, entry] of log.entries()) {
     const at = `entry ${i + 1}`;
@@ -111,6 +125,7 @@ export const checkPickBans = (
       }
       state.protected[side].push(entry.slot);
     } else if (entry.action === "ban") {
+      if (protectsLeft()) return fail("out-of-order", `${at}: protects come before bans`);
       if (side !== turn(first.ban, banned().length))
         return fail("out-of-order", `${at}: not ${side}'s ban`);
       if (state.banned[side].length >= rules.bans) return fail("limit", `${at}: too many bans`);
@@ -119,6 +134,11 @@ export const checkPickBans = (
         return fail("bad-slot", `${at}: ${entry.slot} can't be banned`);
       state.banned[side].push(entry.slot);
     } else {
+      if (protectsLeft() || bansLeft()) return fail("out-of-order", `${at}: picks come after bans`);
+      const played = ctx.score ? ctx.score.a + ctx.score.b : 0;
+      if (won && state.picked.length >= played) {
+        return fail("bad-state", `${at}: the match was already won`);
+      }
       if (side !== turn(first.pick, state.picked.length))
         return fail("out-of-order", `${at}: not ${side}'s pick`);
       if (state.picked.length >= bestOf - 1) return fail("limit", `${at}: too many picks`);

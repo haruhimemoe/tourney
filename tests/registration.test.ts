@@ -99,6 +99,9 @@ describe("canRegister", () => {
       error: { code: "limit" },
     });
     expect(canRegister(T, "staff", { players: 2, staff: 99 }, now).ok).toBe(true);
+    expect(canRegister(T, "player", { players: Number.NaN, staff: 0 }, now)).toMatchObject({
+      error: { code: "bad-input" },
+    });
     expect(
       canRegister(T, "staff", { players: 0, staff: 0 }, new Date("2026-07-02T00:00:00Z")),
     ).toMatchObject({

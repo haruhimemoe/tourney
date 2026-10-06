@@ -54,6 +54,13 @@ describe("checkTeam", () => {
     expect(TeamSchema.parse(TEAM)).toEqual(TEAM);
   });
 
+  it("checks the rules too", () => {
+    const solo = { kind: "solo" as const, lineup: 1, rosterMin: 1, rosterMax: 2, subsMax: 0 };
+    expect(checkTeam({ ...TEAM, roster: [1, 2], subs: [] }, solo)).toMatchObject({
+      error: { code: "bad-input" },
+    });
+  });
+
   it.each<[string, Partial<Team>]>([
     ["captain off roster", { captainId: 9 }],
     ["duplicate", { subs: [3] }],
@@ -89,6 +96,7 @@ describe("names", () => {
 
   it("numbers taken names and clamps to 32", () => {
     expect(uniqueTeamName("Moss", [])).toBe("Moss");
+    expect(uniqueTeamName("   ", ["team"])).toBe("Team 2");
     expect(uniqueTeamName("moss", ["MOSS"])).toBe("moss 2");
     expect(uniqueTeamName("Moss", ["Moss", "moss 2"])).toBe("Moss 3");
     const long = "x".repeat(40);

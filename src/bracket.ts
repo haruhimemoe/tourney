@@ -96,7 +96,8 @@ export const winnerOf = (match: BracketMatch, want: "winner" | "loser"): string 
  * @function settleBracket
  * @param bracket {Bracket} a bracket whose results are set
  * @returns {Bracket} a copy with every side filled from its source and every status worked out:
- *          pending, ready, bye or skipped (results stay as they are)
+ *          pending, ready, bye or skipped. A result stays only while both of its sides are
+ *          known; one left without its players is dropped
  */
 export const settleBracket = (bracket: Bracket): Bracket => {
   const seen = new Map<string, BracketMatch>();
@@ -112,7 +113,9 @@ export const settleBracket = (bracket: Bracket): Bracket => {
     const a = { ...match.a, ...resolve(match.a.source) };
     const b = { ...match.b, ...resolve(match.b.source) };
     let next: BracketMatch = { ...match, a, b };
-    if (!hasResult(match)) {
+    // A result only stands while both sides are known and present; otherwise it is dropped.
+    const standing = hasResult(match) && a.entrant !== null && b.entrant !== null;
+    if (!standing) {
       next = { ...next, status: "pending", scoreA: null, scoreB: null, winner: null };
       const gf = match.round === "GFR" && match.a.source.kind === "winner";
       const feeder = gf ? seen.get((match.a.source as { match: string }).match) : undefined;
