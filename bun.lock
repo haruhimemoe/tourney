@@ -6,7 +6,6 @@
       "name": "@haruhimemoe/tourney",
       "devDependencies": {
         "@biomejs/biome": "2.5.14",
-        "@haruhimemoe/osu": "0.5.0",
         "@haruhimemoe/pool": "0.3.0",
         "@haruhimemoe/time": "0.1.0",
         "@types/node": "26.6.2",
@@ -16,7 +15,6 @@
         "zod": "4.6.5",
       },
       "peerDependencies": {
-        "@haruhimemoe/osu": "^0.5.0",
         "@haruhimemoe/pool": "^0.3.0",
         "@haruhimemoe/time": "^0.1.0",
         "zod": "^4.0.16",
@@ -51,8 +49,6 @@
     "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.5.14", "", { "os": "win32", "cpu": "arm64" }, "sha512-pHgAFffmZtaYoxavEsWEYNvcA7NwOIjLyqw2HXyLbt16xYryX0L4fMV2u0G9ag6LNYPIoqWaWqzUcnc6rLGGXg=="],
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.5.14", "", { "os": "win32", "cpu": "x64" }, "sha512-oJWmBhoHsnhUKIke+0gXDX0mltJrWHA1UyHsrTlXwX0TL64ilVZAo+TYZm97baecV0esBdpzy3k96q+09JaZUQ=="],
-
-    "@haruhimemoe/osu": ["@haruhimemoe/osu@0.5.0", "", { "peerDependencies": { "zod": "^4.0.16" } }, "sha512-TlCtJ8S98nJX1ybhdHuU5CrdAwzQJCd9NkpHmuLNYqvdjYjFEWxiAdfWulNgNuZNGWI8EPRenCa0u+x7otoR1w=="],
 
     "@haruhimemoe/pool": ["@haruhimemoe/pool@0.3.0", "", { "peerDependencies": { "zod": "^4.0.16" } }, "sha512-5apGV57EPxkkj2hRJnXT6ym/T5CExyRJyA526POVHTQ5p1sSBhfUa6SeUiiZefj95BxHtlA6YT/PfPi0+FJ1hA=="],
 
