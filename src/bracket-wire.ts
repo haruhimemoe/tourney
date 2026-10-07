@@ -87,6 +87,7 @@ export const wireBracket = (size: number, rounds: readonly Round[]): WiredMatch[
         { kind: "loser", match: dropping[order[j] as number] as string },
       ]);
     }
+    if (round.side === "third") return pairUp(at(winners, k - 2), "loser");
     if (round.code === "GF") {
       const final = at(winners, k - 1)[0] as string;
       const lastLosers = losers.at(-1)?.[0];

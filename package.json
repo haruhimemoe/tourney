@@ -1,7 +1,7 @@
 {
   "name": "@haruhimemoe/tourney",
-  "version": "0.1.0",
-  "description": "osu! tournaments as data: zod schemas and pure functions for tournaments, brackets, matches, pick/ban logs, teams, drafts, registration and scheduling.",
+  "version": "0.2.0",
+  "description": "osu! tournaments as data: zod schemas and pure functions for tournaments, brackets, groups, matches, mp links, pick/ban logs, teams, drafts, registration and scheduling.",
   "keywords": [
     "osu",
     "osu!",
@@ -25,6 +25,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./mp": {
+      "types": "./dist/mp.d.ts",
+      "default": "./dist/mp.js"
     },
     "./package.json": "./package.json"
   },
@@ -57,17 +61,24 @@
   },
   "peerDependencies": {
     "zod": "^4.0.16",
+    "@haruhimemoe/osu": "^0.5.0",
     "@haruhimemoe/pool": "^0.3.0",
     "@haruhimemoe/time": "^0.1.0"
   },
+  "peerDependenciesMeta": {
+    "@haruhimemoe/osu": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
+    "@haruhimemoe/osu": "0.5.0",
+    "@haruhimemoe/pool": "0.3.0",
+    "@haruhimemoe/time": "0.1.0",
     "@types/node": "26.6.2",
     "@vitest/coverage-v8": "5.0.1",
     "typescript": "7.0.2",
     "vitest": "5.0.1",
-    "zod": "4.6.5",
-    "@haruhimemoe/pool": "0.3.0",
-    "@haruhimemoe/time": "0.1.0"
+    "zod": "4.6.5"
   }
 }

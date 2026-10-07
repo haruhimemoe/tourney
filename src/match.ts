@@ -40,6 +40,8 @@ export const PlayerScoreSchema = z.object({
 /** One map played in a match. */
 export const MapResultSchema = z.object({
   slot: z.string().min(1).max(32),
+  /** The osu! game id, when the map was read from an mp link. */
+  gameId: z.number().int().positive().optional(),
   winner: SideSchema.nullable(),
   warmup: z.boolean(),
   aborted: z.boolean(),

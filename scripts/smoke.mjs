@@ -48,4 +48,54 @@ const state = checkPickBans([{ side: "a", action: "ban", slot: "b:NM#1" }], {
 assert.ok(state.ok);
 assert.deepEqual(state.value.next, { side: "b", action: "ban" });
 
+const { placements, roundRobin, rollFirst } = await import("@haruhimemoe/tourney");
+const third = createBracket({
+  entrants: ["a", "b", "c", "d"],
+  format: "single",
+  bestOf: 3,
+  thirdPlace: true,
+});
+assert.ok(third.ok);
+assert.deepEqual(
+  third.value.rounds.map((r) => r.code),
+  ["SF", "3RD", "F"],
+);
+let single = third.value;
+for (const code of ["M1", "M2", "M3", "M4"]) {
+  const next = reportResult(single, code, { scoreA: 2, scoreB: 0 });
+  assert.ok(next.ok, code);
+  single = next.value;
+}
+assert.deepEqual(
+  placements(single).map((p) => p.place),
+  [1, 2, 3, 4],
+);
+const rr = roundRobin(["a", "b", "c"]);
+assert.ok(rr.ok);
+assert.equal(rr.value.length, 3);
+assert.deepEqual(rollFirst({ a: 1, b: 2 }, { ban: "winner", pick: "loser" }), {
+  ok: true,
+  value: { winner: "b", first: { ban: "b", pick: "a" } },
+});
+
+const { fromOsuMatch } = await import("@haruhimemoe/tourney/mp");
+assert.ok(existsSync("dist/mp.d.ts"), "mp types are built");
+const read = fromOsuMatch(
+  {
+    id: 1,
+    name: "x",
+    startTime: "",
+    endTime: null,
+    events: [],
+    users: [],
+    firstEventId: 1,
+    latestEventId: 1,
+  },
+  { pool: { slots: [] }, sides: { a: { players: [1] }, b: { players: [2] } } },
+);
+assert.deepEqual(read, {
+  ok: true,
+  value: { maps: [], score: { a: 0, b: 0 }, winner: null, problems: [] },
+});
+
 console.log("smoke: ok");

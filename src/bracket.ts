@@ -143,11 +143,13 @@ export type BracketOptions = {
   bestOf: BestOfInput;
   /** Double elimination only. */
   grandFinalReset?: boolean;
+  /** Single elimination only: a third place match between the SF losers, before F. */
+  thirdPlace?: boolean;
 };
 
 /**
  * @function createBracket
- * @param opts {BracketOptions} seeded entrants, format, best-of and reset
+ * @param opts {BracketOptions} seeded entrants, format, best-of, reset and third place
  * @returns {Result<Bracket>} a settled bracket with byes played out, or bad-input for empty or
  *          repeated ids or anything buildLadder refuses
  */
@@ -166,6 +168,7 @@ export const createBracket = (opts: BracketOptions): Result<Bracket> => {
     qualifiers: false,
     bestOf: opts.bestOf,
     grandFinalReset,
+    thirdPlace: opts.thirdPlace === true,
   });
   if (!ladder.ok) return ladder;
   const side = (source: Source): BracketSide => ({ source, entrant: null, settled: false });

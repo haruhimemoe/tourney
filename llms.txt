@@ -1,8 +1,8 @@
 # @haruhimemoe/tourney
 
-> osu! tournaments as data: zod schemas and pure functions for tournaments, round ladders (single and double elimination, qualifiers, grand final reset), brackets with progression and byes, qualifier seeding, stored match records, pick/ban logs checked against a @haruhimemoe/pool pool, teams with subs and lineups, captain drafts, registration and scheduling through @haruhimemoe/time. No storage, network or clock. Peers: zod, @haruhimemoe/pool, @haruhimemoe/time. ESM for Node 22.12+, Bun, Deno, browsers and bundlers.
+> osu! tournaments as data: zod schemas and pure functions for tournaments, round ladders (single and double elimination, qualifiers, grand final reset), brackets with progression, byes, third place and placements, round robin and swiss groups, qualifier seeding, stored match records, pick/ban logs with phase orders checked against a @haruhimemoe/pool pool, rolls, mp links read into matches (via @haruhimemoe/osu), teams with subs and lineups, captain drafts, registration and scheduling through @haruhimemoe/time. No storage, network or clock. Peers: zod, @haruhimemoe/pool, @haruhimemoe/time; @haruhimemoe/osu optional (for /mp). ESM for Node 22.12+, Bun, Deno, browsers and bundlers.
 
-Main exports: `buildLadder`, `createBracket`, `reportResult`, `reportForfeit`, `clearResult`, `champion`, `rankQualifiers`, `checkPickBans`, `checkScore`, `checkTeam`, `checkLineup`, `draftOrder`, `makePick`, `reviewRegistration`, `canRegister`, `suggestMatchTimes`, `checkReschedule`, `TournamentSchema`, `TeamSchema`, `MatchSchema`, `BracketSchema`. One entry point: `@haruhimemoe/tourney`.
+Main exports: `buildLadder`, `createBracket`, `reportResult`, `reportForfeit`, `clearResult`, `champion`, `rankQualifiers`, `checkPickBans`, `checkScore`, `checkTeam`, `checkLineup`, `draftOrder`, `makePick`, `reviewRegistration`, `canRegister`, `suggestMatchTimes`, `checkReschedule`, `TournamentSchema`, `TeamSchema`, `MatchSchema`, `BracketSchema`, `placements`, `pickBanPhases`, `rollFirst`, `roundRobin`, `groupStandings`, `swissPairings`, `seedsFromGroups`. Entry points: `@haruhimemoe/tourney`, and `@haruhimemoe/tourney/mp` (`fromOsuMatch`).
 
 ## Docs
 
@@ -10,4 +10,6 @@ Main exports: `buildLadder`, `createBracket`, `reportResult`, `reportForfeit`, `
 - [Quick start](https://github.com/haruhimemoe/tourney#quick-start)
 - [Ladders](https://github.com/haruhimemoe/tourney#ladders): round codes and play order
 - [Brackets](https://github.com/haruhimemoe/tourney#brackets): statuses, progression, reset
-- [Pick/ban](https://github.com/haruhimemoe/tourney#pickban): rules and refusals
+- [Pick/ban](https://github.com/haruhimemoe/tourney#pickban): rules, phase order, rolls and refusals
+- [Reading mp links](https://github.com/haruhimemoe/tourney#reading-mp-links): fromOsuMatch and its problems
+- [Groups](https://github.com/haruhimemoe/tourney#groups): round robin, standings, swiss, groups to a bracket

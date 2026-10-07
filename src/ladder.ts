@@ -1,8 +1,9 @@
 /**
  * @file src/ladder.ts
  * @desc Round ladders for single and double elimination: round codes, names, play order and
- *       best-of per round. RO<n> while 16 or more are left, then QF, SF, F; LR1.. for the losers
- *       bracket; GF and GFR (bracket reset); Q for qualifiers.
+ *       best-of per round. RO<n> while 16 or more are left, then QF, SF, F; 3RD (third place,
+ *       single only) right before F; LR1.. for the losers bracket; GF and GFR (bracket reset); Q
+ *       for qualifiers.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
  * @modified Tue Oct 6, 2026
@@ -27,7 +28,7 @@ export const MAX_BEST_OF = 25;
 export const RoundSchema = z.object({
   code: z.string().min(1).max(8),
   name: z.string().min(1).max(64),
-  side: z.enum(["qualifiers", "winners", "losers", "grand"]),
+  side: z.enum(["qualifiers", "winners", "losers", "grand", "third"]),
   order: z.number().int().min(0),
   bestOf: z.number().int().min(1).max(MAX_BEST_OF).nullable(),
 });
@@ -47,6 +48,8 @@ export type LadderOptions = {
   bestOf: BestOfInput;
   /** Double elimination only: add GFR, played when the losers side wins GF. */
   grandFinalReset?: boolean;
+  /** Single elimination only: add 3RD, the SF losers, played right before F. */
+  thirdPlace?: boolean;
 };
 
 /**
@@ -82,13 +85,16 @@ const winnersName = (code: string, format: Format): string =>
  * @param size {number} entrants
  * @param format {Format} the format
  * @param grandFinalReset {boolean} add GFR
+ * @param thirdPlace {boolean} single elimination: add 3RD before F when there are semifinals
  * @returns {Omit<Round, "order" | "bestOf">[]} the elimination rounds in play order: WB1, then
- *          each WB r+1 before LR 2r-1 and LR 2r, then GF and GFR
+ *          each WB r+1 before LR 2r-1 and LR 2r, then GF and GFR; in single elimination WB1 to
+ *          F with 3RD right before F
  */
 export const ladderShape = (
   size: number,
   format: Format,
   grandFinalReset: boolean,
+  thirdPlace = false,
 ): Omit<Round, "order" | "bestOf">[] => {
   const n = bracketSize(size);
   const k = Math.log2(n);
@@ -101,7 +107,12 @@ export const ladderShape = (
     name: `Losers Round ${i}`,
     side: "losers" as const,
   });
-  if (format === "single") return Array.from({ length: k }, (_, i) => wb(i + 1));
+  if (format === "single") {
+    const rounds = Array.from({ length: k }, (_, i) => wb(i + 1));
+    if (!thirdPlace || k < 2) return rounds;
+    const third = { code: "3RD", name: "Third Place", side: "third" as const };
+    return [...rounds.slice(0, -1), third, ...rounds.slice(-1)];
+  }
   const rounds: Omit<Round, "order" | "bestOf">[] = [wb(1)];
   for (let r = 1; r < k; r++) rounds.push(wb(r + 1), lr(2 * r - 1), lr(2 * r));
   rounds.push({ code: "GF", name: "Grand Final", side: "grand" });
@@ -116,14 +127,20 @@ const isBestOf = (n: number): boolean =>
  * @function buildLadder
  * @param opts {LadderOptions} entrants, format, qualifiers, best-of and reset
  * @returns {Result<Round[]>} the rounds in play order, or bad-input for a size outside 2..256, an
- *          even or out-of-range best-of, or a best-of key that is not an elimination round
+ *          even or out-of-range best-of, or a best-of key that is not an elimination round.
+ *          `grandFinalReset` only applies to double elimination, `thirdPlace` only to single
  */
 export const buildLadder = (opts: LadderOptions): Result<Round[]> => {
   const { size, format, bestOf } = opts;
   if (!Number.isInteger(size) || size < 2 || size > MAX_ENTRANTS) {
     return fail("bad-input", `size must be 2 to ${MAX_ENTRANTS}`);
   }
-  const shape = ladderShape(size, format, format === "double" && opts.grandFinalReset === true);
+  const shape = ladderShape(
+    size,
+    format,
+    format === "double" && opts.grandFinalReset === true,
+    format === "single" && opts.thirdPlace === true,
+  );
   const base = typeof bestOf === "number" ? bestOf : bestOf.default;
   const overrides = typeof bestOf === "number" ? {} : (bestOf.rounds ?? {});
   if (!isBestOf(base)) return fail("bad-input", "best-of must be an odd number from 1 to 25");

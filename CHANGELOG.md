@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-06
+
+### Added
+
+- Pick/ban phase order: `rules.phases` (`PickBanPhaseSchema`) for split bans and any other order, `pickBanPhases`, and `phase` in the replay state. The 0.1 `protects` / `bans` rules still work as shorthand and give the same results and refusals.
+- `rollFirst`: two rolls and the roll winner's choice to the first turns; a tie is refused.
+- Third place match in single elimination (`thirdPlace: true`, round `3RD`, before `F`).
+- `placements`: standings from a bracket in both formats, filled in as rounds finish.
+- `@haruhimemoe/tourney/mp`: `fromOsuMatch` reads an osu! multiplayer match (from `@haruhimemoe/osu`) into maps, score, winner and a problem list. `MapResultSchema` takes an optional `gameId`.
+- Groups: `roundRobin`, `groupStandings` with points and tiebreaks (`StandingsRulesSchema`), `swissPairings` and `swissRounds`, `snakeGroups`, `seedsFromGroups`, `GroupSchema`.
+
+### Changed
+
+- `@haruhimemoe/osu` (0.5 or newer) is an optional peer dependency, needed only for `@haruhimemoe/tourney/mp`.
+- `RoundSchema.side` can be `"third"`. Code that switches over every side needs a case for it.
+
 ## [0.1.0] - 2026-10-06
 
 ### Added
@@ -20,5 +36,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Tournaments with phases and a registration window; registrations with review, role conflicts and caps.
 - Scheduling through `@haruhimemoe/time` (`suggestMatchTimes`) and reschedule rules (`checkReschedule`).
 
-[Unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/haruhimemoe/tourney/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/haruhimemoe/tourney/releases/tag/v0.1.0
