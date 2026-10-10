@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-10
+
+### Changed
+
+- The `@haruhimemoe/osu` peer range takes 0.6 and 0.7 as well as 0.5.
+- CI runs CodeQL and a gitleaks scan of the full git history, and Dependabot covers dependencies and pinned actions. Dependencies are on their latest versions.
+
 ## [0.2.0] - 2026-10-06
 
 ### Added
@@ -36,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Tournaments with phases and a registration window; registrations with review, role conflicts and caps.
 - Scheduling through `@haruhimemoe/time` (`suggestMatchTimes`) and reschedule rules (`checkReschedule`).
 
-[Unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/haruhimemoe/tourney/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/haruhimemoe/tourney/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/haruhimemoe/tourney/releases/tag/v0.1.0

@@ -1,6 +1,6 @@
 {
   "name": "@haruhimemoe/tourney",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "osu! tournaments as data: zod schemas and pure functions for tournaments, brackets, groups, matches, mp links, pick/ban logs, teams, drafts, registration and scheduling.",
   "keywords": [
     "osu",
@@ -61,7 +61,7 @@
   },
   "peerDependencies": {
     "zod": "^4.0.16",
-    "@haruhimemoe/osu": "^0.5.0",
+    "@haruhimemoe/osu": "^0.5.0 || ^0.6.0 || ^0.7.0",
     "@haruhimemoe/pool": "^0.3.0",
     "@haruhimemoe/time": "^0.1.0"
   },
@@ -71,14 +71,14 @@
     }
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
-    "@haruhimemoe/osu": "0.5.0",
+    "@biomejs/biome": "2.5.15",
+    "@haruhimemoe/osu": "0.7.0",
     "@haruhimemoe/pool": "0.3.0",
     "@haruhimemoe/time": "0.1.0",
-    "@types/node": "26.6.2",
-    "@vitest/coverage-v8": "5.0.1",
+    "@types/node": "26.6.5",
+    "@vitest/coverage-v8": "5.0.3",
     "typescript": "7.0.2",
-    "vitest": "5.0.1",
+    "vitest": "5.0.3",
     "zod": "4.6.5"
   }
 }
