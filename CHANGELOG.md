@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-12
+
 ### Added
 
 - `@haruhimemoe/tourney/lan`, a new entry point for LAN events. It needs no new peers.
@@ -50,7 +52,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Tournaments with phases and a registration window; registrations with review, role conflicts and caps.
 - Scheduling through `@haruhimemoe/time` (`suggestMatchTimes`) and reschedule rules (`checkReschedule`).
 
-[unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.2.1...HEAD
+[unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/haruhimemoe/tourney/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/haruhimemoe/tourney/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/haruhimemoe/tourney/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/haruhimemoe/tourney/releases/tag/v0.1.0
