@@ -2,6 +2,7 @@
  * @file src/lan-codes.ts
  * @desc Roommate pair codes: six symbols from a 32-symbol alphabet with no 0, O, 1 or I. The
  *       caller passes the random bytes, so codes stay testable and src/ keeps no randomness.
+ *       Typed codes drop whitespace, hyphens and the Unicode dashes autocorrect puts in.
  * @author David @dvhsh (https://dvh.sh)
  * @created Mon Oct 12, 2026
  * @modified Mon Oct 12, 2026
@@ -33,10 +34,12 @@ export const pairCode = (bytes: ArrayLike<number>): string =>
 /**
  * @function normalizePairCode
  * @param input {string} a code as someone typed it, e.g. " abc-def "
- * @returns {string | null} the code uppercased without whitespace or dashes, or null when that
- *          isn't a code
+ * @returns {string | null} the code uppercased without whitespace or dashes (the ASCII hyphen, and
+ *          U+2010 to U+2015 and U+2212, which phones autocorrect it to), or null when that isn't
+ *          a code
  */
 export const normalizePairCode = (input: string): string | null => {
-  const code = input.toUpperCase().replace(/[\s-]/g, "");
+  // Whitespace, "-", U+2010 (hyphen) to U+2015 (horizontal bar), U+2212 (minus sign).
+  const code = input.toUpperCase().replace(/[\s\u2010-\u2015\u2212-]/g, "");
   return PATTERN.test(code) ? code : null;
 };

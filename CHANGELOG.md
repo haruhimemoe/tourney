@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `@haruhimemoe/tourney/lan`, a new entry point for LAN events. It needs no new peers.
 - `allocate`: seats active signups by kind priority, then submit time, then id, up to a capacity, waitlists the rest, seats companions after every signup, and gives out rooms from an inventory of room types (`roomsUsed`, `roomShort`). `seatingOrder` and `roomGroups` (mutual roommate pairs on 2-bed rooms, companions, empty beds) are exported on their own.
-- Roommate pair codes: `pairCode` from random bytes, `normalizePairCode` for what people type, `PairCodeSchema`, `PAIR_CODE_ALPHABET` (no 0, O, 1 or I) and `PAIR_CODE_LENGTH`.
+- Roommate pair codes: `pairCode` from random bytes, `normalizePairCode` for what people type (any case, whitespace, and hyphens or the Unicode dashes phones autocorrect them to: U+2010 to U+2015 and U+2212), `PairCodeSchema`, `PAIR_CODE_ALPHABET` (no 0, O, 1 or I) and `PAIR_CODE_LENGTH`.
 - `LanRegistrationSchema` (extendable), `LAN_STATUSES`, `ACTIVE_LAN_STATUSES` and `RoomStockSchema`; `deriveAttendeeKind` and `ATTENDEE_KINDS` (staff, player or attendee from tournament registrations); `roomShares`, a room price split into whole-unit shares.
 
 ## [0.2.1] - 2026-10-10

@@ -311,9 +311,10 @@ import { normalizePairCode, pairCode } from "@haruhimemoe/tourney/lan";
 const code = pairCode(crypto.getRandomValues(new Uint8Array(6))); // e.g. "K7QX2M"
 normalizePairCode(" k7q-x2m "); // "K7QX2M"
 normalizePairCode("K7QX20"); // null: 0 isn't in the alphabet
+normalizePairCode("K7Q\u2013X2M"); // "K7QX2M": an autocorrected en dash works too
 ```
 
-A code is `PAIR_CODE_LENGTH` (6) symbols from `PAIR_CODE_ALPHABET`: `A` to `Z` without `O` or `I`, and `2` to `9`. That is 32 symbols, about a billion codes, and nothing to misread. `pairCode` takes the low 5 bits of each of the first 6 bytes (a missing byte reads 0), so give it random bytes. `normalizePairCode` uppercases what someone typed and drops whitespace and dashes, and returns null unless the result is a code. `PairCodeSchema` checks a stored code. Making sure a new code isn't already taken is up to you.
+A code is `PAIR_CODE_LENGTH` (6) symbols from `PAIR_CODE_ALPHABET`: `A` to `Z` without `O` or `I`, and `2` to `9`. That is 32 symbols, about a billion codes, and nothing to misread. `pairCode` takes the low 5 bits of each of the first 6 bytes (a missing byte reads 0), so give it random bytes. `normalizePairCode` uppercases what someone typed and drops whitespace and dashes, including the ones phones autocorrect a hyphen to (U+2010 to U+2015, and the minus sign U+2212), and returns null unless the result is a code. `PairCodeSchema` checks a stored code. Making sure a new code isn't already taken is up to you.
 
 ### Seating and rooms
 
@@ -334,7 +335,7 @@ if (result.ok) {
 - Active signups line up by `seatingOrder`: kind (a kind not in `priority` goes after all of them), then `submittedAt`, then id. The first `capacity` are `accepted` and the rest `waitlisted`. Rejected and withdrawn signups appear nowhere.
 - Companions get the seats left once every signup has one, earliest signup first. An accepted signup whose companion didn't fit is in `companionShort`. `headcount` is the accepted signups plus seated companions.
 - Rooms go out by `roomGroups`, in seating order, while each room type lasts. Two signups on the same 2-bed room type whose `roommateId`s name each other share a room; everyone else on a room type gets one alone. A group is `roomed` only when all of it is accepted. Otherwise its accepted members are in `roomShort`, and so is anyone accepted on a room type that isn't in `inventory`. `roomsUsed` counts rooms per type.
-- A `RoomGroup` has a stable `key` (`room:` and its smallest member id), the `room` type, `memberIds`, `companionOf` (the signup whose companion takes the second bed of a 2-bed room) and `emptyBed`.
+- A `RoomGroup` has a stable `key` (`room:` and its smallest member id), the `room` type, `memberIds`, `companionOf` (the signup whose companion takes the second bed of a 2-bed room) and `emptyBed`. Only `companionOf` gives a companion a bed: one who comes with someone in a paired twin or a single room still counts toward `headcount` but has no bed, so don't infer housing from `headcount` or `hasCompanion` alone.
 
 `allocate` refuses with `bad-input` a capacity or room count that isn't null or a whole number from 0, beds other than 1 or 2, a repeated id, or a `submittedAt` that isn't a time. It never mutates the signups, and the same signups in any order give the same result.
 

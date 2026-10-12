@@ -1,7 +1,7 @@
 /**
  * @file tests/lan-codes.test.ts
  * @desc Roommate pair codes: the low bits of six bytes, missing bytes, 500 seeded codes against
- *       the schema, the alphabet, and normalizing what people type.
+ *       the schema, the alphabet, and normalizing what people type (Unicode dashes included).
  * @author David @dvhsh (https://dvh.sh)
  * @created Mon Oct 12, 2026
  * @modified Mon Oct 12, 2026
@@ -45,7 +45,23 @@ describe("normalizePairCode", () => {
     expect(normalizePairCode("k7q\tx2m")).toBe("K7QX2M");
   });
 
-  it.each(["abcde", "ABCDE0", "ABCDEFG", "", "ABC_DEF"])("refuses %j", (input) => {
-    expect(normalizePairCode(input)).toBeNull();
+  it("reads an autocorrected en dash or minus sign like a hyphen", () => {
+    const typed = ["abc-def", "abc\u2013def", "abc\u2212def", " abc \u2013 def "];
+    expect(typed.map(normalizePairCode)).toEqual(["ABCDEF", "ABCDEF", "ABCDEF", "ABCDEF"]);
   });
+
+  it.each(["2010", "2011", "2012", "2013", "2014", "2015", "2212"])(
+    "drops U+%s between the halves",
+    (hex) => {
+      const dash = String.fromCharCode(Number.parseInt(hex, 16));
+      expect(normalizePairCode(`K7Q${dash}X2M`)).toBe("K7QX2M");
+    },
+  );
+
+  it.each(["abcde", "ABCDE0", "ABCDEFG", "", "ABC_DEF", "0O1I0O", "\u2013\u2212\u2010"])(
+    "refuses %j",
+    (input) => {
+      expect(normalizePairCode(input)).toBeNull();
+    },
+  );
 });
