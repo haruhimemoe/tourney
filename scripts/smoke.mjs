@@ -1,8 +1,9 @@
 /**
  * @file scripts/smoke.mjs
  * @desc Imports the built package through its own exports map, the way Node consumers will, and
- *       runs a 4-entrant double elimination bracket to a champion, the /mp entry, and the /lan
- *       entry (a pair code, three signups for two seats). Run by `bun run test:dist`.
+ *       runs a 4-entrant double elimination bracket to a champion, the /mp entry, the /lan entry
+ *       (a pair code, three signups for two seats) and the /api entry (an error body). Run by
+ *       `bun run test:dist`.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
  * @modified Mon Oct 12, 2026
@@ -119,5 +120,12 @@ const seats = allocate([signup("x", 1), signup("y", 2), signup("z", 3)], {
 assert.ok(seats.ok);
 assert.deepEqual(seats.value.accepted, ["x", "y"]);
 assert.deepEqual(seats.value.waitlisted, ["z"]);
+
+const { API_KEY_PREFIX, ApiErrorSchema } = await import("@haruhimemoe/tourney/api");
+assert.ok(existsSync("dist/api.d.ts"), "api types are built");
+assert.equal(API_KEY_PREFIX, "htr_");
+const notFound = { error: { code: "not_found", message: "No such edition." } };
+assert.deepEqual(ApiErrorSchema.parse(notFound), notFound);
+assert.equal(ApiErrorSchema.safeParse({ error: { code: "not_found" } }).success, false);
 
 console.log("smoke: ok");

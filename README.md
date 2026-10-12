@@ -1,6 +1,6 @@
 # @haruhimemoe/tourney
 
-osu! tournaments as data. Zod schemas and pure functions for tournaments, round ladders, brackets with progression and placements, groups (round robin and swiss), matches read from mp links, pick/ban logs with phase orders, rolls, teams with subs, captain drafts, registration, scheduling, and LAN seating and rooms.
+osu! tournaments as data. Zod schemas and pure functions for tournaments, round ladders, brackets with progression and placements, groups (round robin and swiss), matches read from mp links, pick/ban logs with phase orders, rolls, teams with subs, captain drafts, registration, scheduling, LAN seating and rooms, and the shapes of tourney.haruhime.moe's public API.
 
 There is no storage, network, clock or UI in here. You keep the records (in Mongo or anywhere else), pass `now` and ids in, and get new values or a refusal back. Pools come from [`@haruhimemoe/pool`](https://github.com/haruhimemoe/pool) (pick/ban logs point at its `slotKey`) and availability from [`@haruhimemoe/time`](https://github.com/haruhimemoe/time). ESM for Node 22.12+, Bun, Deno, browsers and bundlers.
 
@@ -10,7 +10,7 @@ There is no storage, network, clock or UI in here. You keep the records (in Mong
 bun add @haruhimemoe/tourney @haruhimemoe/pool @haruhimemoe/time zod
 ```
 
-`zod` (4.0.16 or newer), `@haruhimemoe/pool` and `@haruhimemoe/time` are peer dependencies. To read mp links with `@haruhimemoe/tourney/mp`, also add [`@haruhimemoe/osu`](https://github.com/haruhimemoe/osu) (0.5 or newer), an optional peer. LAN seating, rooms and roommate codes are in `@haruhimemoe/tourney/lan`, which needs nothing more.
+`zod` (4.0.16 or newer), `@haruhimemoe/pool` and `@haruhimemoe/time` are peer dependencies. To read mp links with `@haruhimemoe/tourney/mp`, also add [`@haruhimemoe/osu`](https://github.com/haruhimemoe/osu) (0.5 or newer), an optional peer. LAN seating, rooms and roommate codes are in `@haruhimemoe/tourney/lan`, and the public API's schemas in `@haruhimemoe/tourney/api`. Neither needs anything more.
 
 ## Quick start
 
@@ -302,6 +302,48 @@ Phases run `setup`, `registration`, `qualifiers`, `draft`, `bracket`, `done`. `a
   - it would go over the limit (the first scheduling, with no `from`, doesn't count)
 
 Agreeing on the new time is an invite, see [`@haruhimemoe/invites`](https://github.com/haruhimemoe/invites).
+
+## Public API schemas
+
+`@haruhimemoe/tourney/api` holds the shapes of the public API v1 of [tourney.haruhime.moe](https://tourney.haruhime.moe): what each read answers, what each write takes and answers, and the error body. The site's server and its clients share them, so both sides check the same shapes. Each `XSchema` has a type `X` to go with it (`ApiMatchSchema` and `ApiMatch`).
+
+```ts
+import { ApiErrorSchema, ApiMatchesPageSchema } from "@haruhimemoe/tourney/api";
+
+const body = await response.json(); // from a read of an edition's matches
+if (!response.ok) throw new Error(ApiErrorSchema.parse(body).error.message);
+const { items, next } = ApiMatchesPageSchema.parse(body);
+```
+
+| Read | Answer |
+| --- | --- |
+| a lineage | `ApiLineageResponseSchema`: `{ lineage, editions }` |
+| an edition | `ApiEditionResponseSchema`: `{ edition }` |
+| its rounds | `ApiRoundsResponseSchema`: `{ rounds }` |
+| its teams | `ApiTeamsPageSchema`: a page of `ApiTeam` |
+| its bracket | `ApiBracketResponseSchema`: `{ bracket }`, null until there is one |
+| its matches or its schedule | `ApiMatchesPageSchema`: a page of `ApiMatch` |
+| one match | `ApiMatchResponseSchema`: `{ match }` |
+| its standings | `ApiStandingsResponseSchema`: `{ groups, swiss }`, rows as `groupStandings` gives them |
+| its placements | `ApiPlacementsResponseSchema`: `{ champion, placements }` |
+| the key's owner | `ApiMeResponseSchema`: `{ user: { id, osuId, username } }` |
+
+| Write | Body | Answer |
+| --- | --- | --- |
+| register | `ApiRegistrationInputSchema` | `ApiRegistrationResponseSchema`: `{ registration }` |
+| change a match's time or staff | `ApiMatchPatchSchema` | `ApiMatchUpdateResponseSchema`: `{ match, slots }` |
+| post a result | `ApiResultInputSchema` | `ApiResultResponseSchema`: `{ match, bracket }` |
+| read an mp link | `ApiFillInputSchema` | `ApiFillResponseSchema`: `{ fill }` |
+| post an announcement | `ApiAnnouncementInputSchema` | `ApiAnnouncementResponseSchema`: `{ announcement }` |
+
+- `ApiMatch` is a stored match (`MatchSchema`) without its staff ids, reschedules and notes. `ApiTeam` adds a `status` (one of `TEAM_STATUSES`: `active`, `eliminated`, `withdrawn`) and `usernames` by osu! id. `ApiEdition` is a `TournamentSchema` plus its lineage, slug and year, its page (rules, banner, socials, contact), dates, qualifier and bracket settings, eligibility, pick/ban rules and registration questions.
+- Pages are `apiPageSchema(item)`: `{ items, next }`, where `next` is the cursor of the next page, or null on the last one. `API_PAGE_LIMIT` holds the page size bounds: 1 to 100, and 50 when you don't give one.
+- Errors are `ApiErrorSchema`: `{ error: { code, message, errors?, reasons? }, issues? }`. API keys start with `API_KEY_PREFIX` (`htr_`).
+- Bodies are strict: a key they don't know is refused (inside `maps` and `pickBans` entries, which reuse the stored schemas, it is dropped). A body's type is what you send (`z.input`), so fields with a default are optional. `ApiFillInput` needs only `mpLink` (no warmups, no skipped games), and an announcement is not pinned unless you say so. A match change carries a new `scheduledAt` (null clears it) or one `staff` change (`op` is `add` or `remove`, `kind` one of `API_SLOT_KINDS`). The server takes exactly one of the two.
+- Answers drop keys they don't know, so a client built on these schemas keeps parsing when v1 adds fields.
+- Like everything here, the schemas have no refinements, so `.extend()` them freely.
+
+Changes within v1 are additive: new reads, writes and fields, in minor releases of this package. A breaking change would be a v2.
 
 ## LAN
 

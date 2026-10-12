@@ -2,10 +2,10 @@
  * @file scripts/check-consumer.mjs
  * @desc Installs the packed package with a given zod version into a throwaway project, then
  *       typechecks a consumer strictly (no skipLibCheck, so broken .d.ts can't hide as `any`) and
- *       runs it with extended schemas, first the root and /lan entries without @haruhimemoe/osu
- *       (an optional peer), then the /mp subpath with it. Proves the zod peer range's floor.
- *       Usage: node scripts/check-consumer.mjs <zod version> (after `bun run build`). Needs the
- *       registry.
+ *       runs it with extended schemas, first the root, /lan and /api entries without
+ *       @haruhimemoe/osu (an optional peer), then the /mp subpath with it. Proves the zod peer
+ *       range's floor. Usage: node scripts/check-consumer.mjs <zod version> (after
+ *       `bun run build`). Needs the registry.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
  * @modified Mon Oct 12, 2026
@@ -35,6 +35,7 @@ const tsconfig = (file) => ({
 const CONSUMER = `import { z } from "zod";
 import { TeamSchema, createBracket, reportResult, champion, placements, checkPickBans, PickBanRulesSchema, RosterRulesSchema, DEFAULT_ROSTER_RULES, checkRosterChange, type Bracket, type Result, type RosterRules, type TourneyErrorCode } from "@haruhimemoe/tourney";
 import { LanRegistrationSchema, allocate, type LanAllocation, type LanStatus } from "@haruhimemoe/tourney/lan";
+import { ApiMatchSchema, type ApiMatch } from "@haruhimemoe/tourney/api";
 
 const EgcTeam = TeamSchema.extend({ region: z.string() });
 type EgcTeam = z.infer<typeof EgcTeam>;
@@ -66,7 +67,13 @@ if (!seats.ok || seats.value.roomed[0] !== signup.id || signup.editionId !== "eg
 const allocation: LanAllocation = seats.value;
 // @ts-expect-error a registration status is not a LAN status (it would typecheck if types were any)
 const lost: LanStatus = "approved";
-void [team, bad, allocation, lost, approver];
+const EgcApiMatch = ApiMatchSchema.extend({ stage: z.string() });
+const shown = EgcApiMatch.parse({ id: "m1", bracketCode: "M1", round: "SF", a: "a", b: "b", bestOf: 3, status: "scheduled", scheduledAt: null, scoreA: null, scoreB: null, winner: null, mpLinks: [], streamUrl: null, vodUrl: null, pickBans: [], maps: [], notes: "private", stage: "playoffs" });
+if (shown.stage !== "playoffs" || "notes" in shown) throw new Error("api");
+const apiMatch: ApiMatch = shown;
+// @ts-expect-error an ApiMatch has no staff ids (it would typecheck if types were any)
+const referees: ApiMatch["refereeIds"] = [];
+void [team, bad, allocation, lost, approver, apiMatch, referees];
 console.log("consumer: ok");
 `;
 

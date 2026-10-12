@@ -4,7 +4,7 @@
 
 ## Rules
 
-- **Peers only.** `zod`, `@haruhimemoe/pool` and `@haruhimemoe/time` are peer dependencies, plus `@haruhimemoe/osu` as an optional peer that only `src/mp.ts` and `src/mp-sides.ts` may import (the root entry must never reach it). No network, no DOM, no Node-only APIs, no clock and no randomness in `src/`: callers pass `now` and ids.
+- **Peers only.** `zod`, `@haruhimemoe/pool` and `@haruhimemoe/time` are peer dependencies, plus `@haruhimemoe/osu` as an optional peer that only `src/mp.ts` and `src/mp-sides.ts` may import (the root and `/api` entries must never reach it). No network, no DOM, no Node-only APIs, no clock and no randomness in `src/`: callers pass `now` and ids.
 - **Pure.** Functions never mutate their input and never throw for bad state; they return `{ ok: false, error }`.
 - **Extendable.** Schemas carry no refinements (they would be lost on `.extend()`); cross-field checks live in functions.
 - **Public API is pinned** by `tests/api.test.ts`. Adding or removing an export is a semver decision: say so in `CHANGELOG.md`.
@@ -22,6 +22,7 @@
 | `src/index.ts` | The root exports. |
 | `src/mp.ts`, `src/mp-sides.ts` | The `/mp` entry: `fromOsuMatch` over `@haruhimemoe/osu/match`; which side a score is on. |
 | `src/lan.ts`, `src/lan-*.ts` | The `/lan` entry (`lan.ts` re-exports only): pair codes (`lan-codes`); signup schema, attendee kinds, room shares (`lan-schema`); room groups and seating (`lan-allocate`). |
+| `src/api.ts`, `src/api-reads.ts`, `src/api-writes.ts` | The `/api` entry (`api.ts` re-exports only), tourney.haruhime.moe's public API v1: the error body, pages and read answers (`api-reads`); strict write bodies and write answers (`api-writes`). Tested in `tests/api-schemas.test.ts`. |
 | `src/result.ts`, `src/ids.ts` | `Result`, error codes; id, osu! id, instant and side schemas. |
 | `src/team.ts`, `src/tournament.ts` | Side rules, teams, lineups, names; tournament, phases, registration window. |
 | `src/roster.ts` | Roster rules: the lock, counted changes after it, the approver. |

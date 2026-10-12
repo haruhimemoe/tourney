@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `@haruhimemoe/tourney/api`, a new entry point with the schemas of tourney.haruhime.moe's public API v1, shared by its server and its clients. It needs no new peers. Every schema has a type to go with it (`ApiMatch` for `ApiMatchSchema`).
+- Read answers: `ApiLineageResponseSchema`, `ApiEditionResponseSchema`, `ApiRoundsResponseSchema`, `ApiTeamsPageSchema`, `ApiBracketResponseSchema`, `ApiMatchesPageSchema`, `ApiMatchResponseSchema`, `ApiStandingsResponseSchema`, `ApiPlacementsResponseSchema` and `ApiMeResponseSchema`. They are built from `ApiLineageSchema`, `ApiEditionSummarySchema`, `ApiEditionSchema`, `ApiQuestionSchema`, `ApiRoundSchema`, `ApiTeamSchema` (with a status from `TEAM_STATUSES`, and usernames), `ApiMatchSchema` (a match without its staff ids, reschedules and notes) and `ApiStandingSchema`.
+- Write bodies, strict, each typed as what a caller sends (defaults optional): `ApiRegistrationInputSchema`, `ApiMatchPatchSchema` with `ApiStaffChangeSchema` (slots from `API_SLOT_KINDS`), `ApiResultInputSchema`, `ApiFillInputSchema` and `ApiAnnouncementInputSchema`. Their answers: `ApiRegistrationResponseSchema`, `ApiMatchUpdateResponseSchema`, `ApiResultResponseSchema`, `ApiFillResponseSchema` and `ApiAnnouncementResponseSchema`, built from `ApiRegistrationSchema`, `ApiMatchSlotsSchema`, `ApiFillSchema` and `ApiAnnouncementSchema`.
+- `ApiErrorSchema` (the error body), `apiPageSchema` (pages of `{ items, next }`), `API_PAGE_LIMIT` (1 to 100, default 50) and `API_KEY_PREFIX` (`htr_`).
+
 ## [0.4.0] - 2026-10-12
 
 ### Added
