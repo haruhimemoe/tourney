@@ -4,13 +4,14 @@
  *       exports map, peers only, and that src/ stays browser-safe, headed and small.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
- * @modified Tue Oct 6, 2026
+ * @modified Mon Oct 12, 2026
  */
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import * as root from "../src/index.js";
+import * as lan from "../src/lan.js";
 import * as mp from "../src/mp.js";
 
 const API = [
@@ -109,10 +110,29 @@ const API = [
 
 const MP_API = ["fromOsuMatch"];
 
+const LAN_API = [
+  "ACTIVE_LAN_STATUSES",
+  "ATTENDEE_KINDS",
+  "LAN_STATUSES",
+  "LanRegistrationSchema",
+  "PAIR_CODE_ALPHABET",
+  "PAIR_CODE_LENGTH",
+  "PairCodeSchema",
+  "RoomStockSchema",
+  "allocate",
+  "deriveAttendeeKind",
+  "normalizePairCode",
+  "pairCode",
+  "roomGroups",
+  "roomShares",
+  "seatingOrder",
+];
+
 describe("exports", () => {
   it("exports exactly its API", () => {
     expect(Object.keys(root).sort()).toEqual([...API].sort());
     expect(Object.keys(mp).sort()).toEqual(MP_API);
+    expect(Object.keys(lan).sort()).toEqual([...LAN_API].sort());
   });
 
   it("keeps osu out of the root entry", () => {
@@ -133,9 +153,9 @@ describe("exports", () => {
     expect(used.has("src/mp.ts")).toBe(false);
   });
 
-  it("maps one entry point and has peers only", () => {
+  it("maps its entry points and has peers only", () => {
     const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-    expect(Object.keys(pkg.exports)).toEqual([".", "./mp", "./package.json"]);
+    expect(Object.keys(pkg.exports)).toEqual([".", "./lan", "./mp", "./package.json"]);
     expect(pkg.peerDependenciesMeta).toEqual({ "@haruhimemoe/osu": { optional: true } });
     expect(pkg.dependencies).toBeUndefined();
     expect(Object.keys(pkg.peerDependencies).sort()).toEqual([

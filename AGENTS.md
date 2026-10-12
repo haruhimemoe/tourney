@@ -21,6 +21,7 @@
 | --- | --- |
 | `src/index.ts` | The root exports. |
 | `src/mp.ts`, `src/mp-sides.ts` | The `/mp` entry: `fromOsuMatch` over `@haruhimemoe/osu/match`; which side a score is on. |
+| `src/lan.ts`, `src/lan-*.ts` | The `/lan` entry (`lan.ts` re-exports only): pair codes (`lan-codes`); signup schema, attendee kinds, room shares (`lan-schema`); room groups and seating (`lan-allocate`). |
 | `src/result.ts`, `src/ids.ts` | `Result`, error codes; id, osu! id, instant and side schemas. |
 | `src/team.ts`, `src/tournament.ts` | Side rules, teams, lineups, names; tournament, phases, registration window. |
 | `src/ladder.ts`, `src/seeding.ts` | Round ladders and codes; qualifier ranking, seed order. |
@@ -30,6 +31,7 @@
 | `src/round-robin.ts`, `src/standings.ts`, `src/swiss.ts`, `src/groups.ts` | Group schedules; standings and tiebreaks; swiss pairing; groups to a bracket. |
 | `src/draft.ts`, `src/registration.ts`, `src/schedule.ts` | Drafts; registrations; suggested times and reschedules. |
 | `tests/` | Vitest, one file per module, `egc2026` end to end, `api` pins the surface; `fixtures.ts` has helpers. |
+| `tests/lan-*.test.ts` | The `/lan` entry: one file per module, and `lan-properties` (300 seeded `allocate` runs). |
 | `scripts/smoke.mjs` | Imports the built package through its exports map (`bun run test:dist`). |
 | `scripts/check-consumer.mjs` | Packs, installs with a given zod and the peers in a temp project, strict typecheck and run. |
 

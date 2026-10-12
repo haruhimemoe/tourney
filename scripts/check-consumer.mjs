@@ -2,12 +2,13 @@
  * @file scripts/check-consumer.mjs
  * @desc Installs the packed package with a given zod version into a throwaway project, then
  *       typechecks a consumer strictly (no skipLibCheck, so broken .d.ts can't hide as `any`) and
- *       runs it with extended schemas, first without @haruhimemoe/osu (an optional peer), then
- *       the /mp subpath with it. Proves the zod peer range's floor. Usage:
- *       node scripts/check-consumer.mjs <zod version> (after `bun run build`). Needs the registry.
+ *       runs it with extended schemas, first the root and /lan entries without @haruhimemoe/osu
+ *       (an optional peer), then the /mp subpath with it. Proves the zod peer range's floor.
+ *       Usage: node scripts/check-consumer.mjs <zod version> (after `bun run build`). Needs the
+ *       registry.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
- * @modified Tue Oct 6, 2026
+ * @modified Mon Oct 12, 2026
  */
 
 import { execFileSync } from "node:child_process";
@@ -33,6 +34,7 @@ const tsconfig = (file) => ({
 
 const CONSUMER = `import { z } from "zod";
 import { TeamSchema, createBracket, reportResult, champion, placements, checkPickBans, PickBanRulesSchema, type Bracket, type Result, type TourneyErrorCode } from "@haruhimemoe/tourney";
+import { LanRegistrationSchema, allocate, type LanAllocation, type LanStatus } from "@haruhimemoe/tourney/lan";
 
 const EgcTeam = TeamSchema.extend({ region: z.string() });
 type EgcTeam = z.infer<typeof EgcTeam>;
@@ -51,7 +53,14 @@ const state = checkPickBans([], { pool: { slots: [{ mod: "NM", index: 1 }] }, ru
 if (!state.ok || state.value.next?.action !== "ban") throw new Error("phases");
 // @ts-expect-error an unknown error code must not typecheck (it would if types were any)
 const bad: TourneyErrorCode = "nonsense";
-void [team, bad];
+const EgcSignup = LanRegistrationSchema.extend({ editionId: z.string() });
+const signup = EgcSignup.parse({ id: "l1", osuId: 1, kind: "player", status: "pending", submittedAt: "2026-09-01T00:00:00Z", room: "twin", roommateId: null, pairCode: "K7QX2M", hasCompanion: false, editionId: "egc2026" });
+const seats = allocate([signup], { capacity: 1, inventory: { twin: { rooms: 1, beds: 2 } }, priority: ["staff", "player", "attendee"] });
+if (!seats.ok || seats.value.roomed[0] !== signup.id || signup.editionId !== "egc2026") throw new Error("lan");
+const allocation: LanAllocation = seats.value;
+// @ts-expect-error a registration status is not a LAN status (it would typecheck if types were any)
+const lost: LanStatus = "approved";
+void [team, bad, allocation, lost];
 console.log("consumer: ok");
 `;
 

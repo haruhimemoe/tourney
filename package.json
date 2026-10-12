@@ -26,6 +26,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./lan": {
+      "types": "./dist/lan.d.ts",
+      "default": "./dist/lan.js"
+    },
     "./mp": {
       "types": "./dist/mp.d.ts",
       "default": "./dist/mp.js"

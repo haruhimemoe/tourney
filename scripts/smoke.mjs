@@ -1,10 +1,11 @@
 /**
  * @file scripts/smoke.mjs
  * @desc Imports the built package through its own exports map, the way Node consumers will, and
- *       runs a 4-entrant double elimination bracket to a champion. Run by `bun run test:dist`.
+ *       runs a 4-entrant double elimination bracket to a champion, the /mp entry, and the /lan
+ *       entry (a pair code, three signups for two seats). Run by `bun run test:dist`.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
- * @modified Tue Oct 6, 2026
+ * @modified Mon Oct 12, 2026
  */
 
 import assert from "node:assert/strict";
@@ -97,5 +98,26 @@ assert.deepEqual(read, {
   ok: true,
   value: { maps: [], score: { a: 0, b: 0 }, winner: null, problems: [] },
 });
+
+const { pairCode, allocate } = await import("@haruhimemoe/tourney/lan");
+assert.ok(existsSync("dist/lan.d.ts"), "lan types are built");
+assert.equal(pairCode(new Uint8Array(6)), "AAAAAA");
+const signup = (id, minute) => ({
+  id,
+  kind: "player",
+  status: "pending",
+  submittedAt: `2026-09-01T00:0${minute}:00Z`,
+  room: null,
+  roommateId: null,
+  hasCompanion: false,
+});
+const seats = allocate([signup("x", 1), signup("y", 2), signup("z", 3)], {
+  capacity: 2,
+  inventory: {},
+  priority: ["staff", "player", "attendee"],
+});
+assert.ok(seats.ok);
+assert.deepEqual(seats.value.accepted, ["x", "y"]);
+assert.deepEqual(seats.value.waitlisted, ["z"]);
 
 console.log("smoke: ok");

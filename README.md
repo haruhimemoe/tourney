@@ -1,6 +1,6 @@
 # @haruhimemoe/tourney
 
-osu! tournaments as data. Zod schemas and pure functions for tournaments, round ladders, brackets with progression and placements, groups (round robin and swiss), matches read from mp links, pick/ban logs with phase orders, rolls, teams with subs, captain drafts, registration and scheduling.
+osu! tournaments as data. Zod schemas and pure functions for tournaments, round ladders, brackets with progression and placements, groups (round robin and swiss), matches read from mp links, pick/ban logs with phase orders, rolls, teams with subs, captain drafts, registration, scheduling, and LAN seating and rooms.
 
 There is no storage, network, clock or UI in here. You keep the records (in Mongo or anywhere else), pass `now` and ids in, and get new values or a refusal back. Pools come from [`@haruhimemoe/pool`](https://github.com/haruhimemoe/pool) (pick/ban logs point at its `slotKey`) and availability from [`@haruhimemoe/time`](https://github.com/haruhimemoe/time). ESM for Node 22.12+, Bun, Deno, browsers and bundlers.
 
@@ -10,7 +10,7 @@ There is no storage, network, clock or UI in here. You keep the records (in Mong
 bun add @haruhimemoe/tourney @haruhimemoe/pool @haruhimemoe/time zod
 ```
 
-`zod` (4.0.16 or newer), `@haruhimemoe/pool` and `@haruhimemoe/time` are peer dependencies. To read mp links with `@haruhimemoe/tourney/mp`, also add [`@haruhimemoe/osu`](https://github.com/haruhimemoe/osu) (0.5 or newer), an optional peer.
+`zod` (4.0.16 or newer), `@haruhimemoe/pool` and `@haruhimemoe/time` are peer dependencies. To read mp links with `@haruhimemoe/tourney/mp`, also add [`@haruhimemoe/osu`](https://github.com/haruhimemoe/osu) (0.5 or newer), an optional peer. LAN seating, rooms and roommate codes are in `@haruhimemoe/tourney/lan`, which needs nothing more.
 
 ## Quick start
 
@@ -281,6 +281,64 @@ Phases run `setup`, `registration`, `qualifiers`, `draft`, `bracket`, `done`. `a
   - it would go over the limit (the first scheduling, with no `from`, doesn't count)
 
 Agreeing on the new time is an invite, see [`@haruhimemoe/invites`](https://github.com/haruhimemoe/invites).
+
+## LAN
+
+`@haruhimemoe/tourney/lan` handles signups for a LAN event: who gets a seat, who waits, who shares a room and what each roommate owes. As everywhere else in the package, you pass the rows and the random bytes in; nothing reads a clock.
+
+### Signups
+
+`LanRegistrationSchema` is one signup:
+
+- `id`, `osuId` and `submittedAt`
+- `kind`: what the person is at the LAN, any string of 1 to 32 characters. Seating ranks it by `priority` (below).
+- `status`: one of `LAN_STATUSES` (`pending`, `accepted`, `waitlisted`, `rejected`, `withdrawn`). The first three are `ACTIVE_LAN_STATUSES`, the ones that compete for seats.
+- `room`: a room type key from your inventory, or null for no room
+- `roommateId` and `pairCode`: who they want to share with (see pair codes)
+- `hasCompanion`: they bring someone who needs a seat too
+
+It has no refinements, so `.extend()` it with your own fields. `RoomStockSchema` is one room type: `{ rooms, beds }`, where `rooms` is a whole number (null for no limit) and `beds` is 1 or 2.
+
+`deriveAttendeeKind(registrations)` reads someone's tournament registrations (their `kind` and `status`) and returns one of `ATTENDEE_KINDS`: `staff` with an approved staff registration, else `player` with a player registration that isn't rejected or withdrawn, else `attendee`.
+
+### Pair codes
+
+Two people who want to share a room pair up with a code: one of them gets a code, the other types it in.
+
+```ts
+import { normalizePairCode, pairCode } from "@haruhimemoe/tourney/lan";
+
+const code = pairCode(crypto.getRandomValues(new Uint8Array(6))); // e.g. "K7QX2M"
+normalizePairCode(" k7q-x2m "); // "K7QX2M"
+normalizePairCode("K7QX20"); // null: 0 isn't in the alphabet
+```
+
+A code is `PAIR_CODE_LENGTH` (6) symbols from `PAIR_CODE_ALPHABET`: `A` to `Z` without `O` or `I`, and `2` to `9`. That is 32 symbols, about a billion codes, and nothing to misread. `pairCode` takes the low 5 bits of each of the first 6 bytes (a missing byte reads 0), so give it random bytes. `normalizePairCode` uppercases what someone typed and drops whitespace and dashes, and returns null unless the result is a code. `PairCodeSchema` checks a stored code. Making sure a new code isn't already taken is up to you.
+
+### Seating and rooms
+
+```ts
+import { allocate } from "@haruhimemoe/tourney/lan";
+
+const result = allocate(signups, {
+  capacity: 50, // seats, companions included; null for no limit
+  inventory: { single: { rooms: 10, beds: 1 }, twin: { rooms: 20, beds: 2 } },
+  priority: ["staff", "player", "attendee"], // kinds in seating order
+});
+if (result.ok) {
+  const { accepted, waitlisted, companionShort, roomed, roomShort, roomsUsed, headcount } =
+    result.value;
+}
+```
+
+- Active signups line up by `seatingOrder`: kind (a kind not in `priority` goes after all of them), then `submittedAt`, then id. The first `capacity` are `accepted` and the rest `waitlisted`. Rejected and withdrawn signups appear nowhere.
+- Companions get the seats left once every signup has one, earliest signup first. An accepted signup whose companion didn't fit is in `companionShort`. `headcount` is the accepted signups plus seated companions.
+- Rooms go out by `roomGroups`, in seating order, while each room type lasts. Two signups on the same 2-bed room type whose `roommateId`s name each other share a room; everyone else on a room type gets one alone. A group is `roomed` only when all of it is accepted. Otherwise its accepted members are in `roomShort`, and so is anyone accepted on a room type that isn't in `inventory`. `roomsUsed` counts rooms per type.
+- A `RoomGroup` has a stable `key` (`room:` and its smallest member id), the `room` type, `memberIds`, `companionOf` (the signup whose companion takes the second bed of a 2-bed room) and `emptyBed`.
+
+`allocate` refuses with `bad-input` a capacity or room count that isn't null or a whole number from 0, beds other than 1 or 2, a repeated id, or a `submittedAt` that isn't a time. It never mutates the signups, and the same signups in any order give the same result.
+
+`roomShares(price, payers)` splits a room's price in whole minor units (cents) between 1 to 1000 payers, the first taking what doesn't divide: `roomShares(10001, 2)` is `[5001, 5000]`. A price that isn't a whole number from 0, or a bad payer count, gives `[]`.
 
 ## License
 
