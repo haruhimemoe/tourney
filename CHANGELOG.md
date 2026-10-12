@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `reviewRegistration` moves a waitlisted registration to pending, for when a spot frees up.
 
+### Fixed
+
+- `checkPickBans` took the tiebreaker only next to the tied score before it, so the final score of a match that went to the tiebreaker (4-3 in a best of 7) was refused.
+
 ## [0.3.0] - 2026-10-12
 
 ### Added

@@ -236,7 +236,7 @@ The log is refused when:
 - the phases are malformed (`bad-input`)
 - with `score` given and a side already through, there are more picks than maps played (`bad-state`)
 - the rules, best-of or first turns are invalid (`bad-input`)
-- the tiebreaker is used anywhere but as one last entry with no side, after `bestOf - 1` picks, at a tie when `score` is given (`bad-state`)
+- the tiebreaker is used anywhere but as one last entry with no side, after `bestOf - 1` picks, at a tie when `score` is given (`bad-state`). The final score of a match that went to the tiebreaker (4-3 in a best of 7) counts as that tie.
 
 ## Groups
 

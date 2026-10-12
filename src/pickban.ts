@@ -5,7 +5,7 @@
  *       turn it is). Slots are @haruhimemoe/pool slotKeys.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
- * @modified Tue Oct 6, 2026
+ * @modified Mon Oct 12, 2026
  */
 
 import { type SlotBucket, slotKey } from "@haruhimemoe/pool";
@@ -40,7 +40,10 @@ export type PickBanContext = {
   rules: PickBanRules;
   bestOf: number;
   first: FirstTurns;
-  /** Maps won so far. When given, the tiebreaker needs a tie and `next` stops once a side won. */
+  /**
+   * Maps won so far. When given, the tiebreaker needs a tie before it (the tied score, or the
+   * final score once it was played) and `next` stops once a side won.
+   */
   score?: { a: number; b: number };
 };
 
@@ -105,6 +108,8 @@ export const checkPickBans = (
   const need = winsNeeded(bestOf);
   const tied = !ctx.score || (ctx.score.a === need - 1 && ctx.score.b === need - 1);
   const won = !!ctx.score && (ctx.score.a >= need || ctx.score.b >= need);
+  // The tiebreaker entry: tied before it, so a final score has every map played.
+  const tiedBefore = tied || (!!ctx.score && ctx.score.a + ctx.score.b === bestOf);
   // Entries made in each phase; `at` is the current phase once full phases are skipped.
   const made = phases.map(() => 0);
   let at = 0;
@@ -123,7 +128,7 @@ export const checkPickBans = (
       if (entry.side !== null) return fail("bad-side", `${where}: the tiebreaker has no side`);
       if (entry.slot !== tb)
         return fail("bad-state", `${where}: ${entry.slot} is not the tiebreaker`);
-      if (state.picked.length !== bestOf - 1 || !tied) {
+      if (state.picked.length !== bestOf - 1 || !tiedBefore) {
         return fail("bad-state", `${where}: the tiebreaker is only played at a tie`);
       }
       state.tiebreaker = true;

@@ -1,10 +1,10 @@
 /**
  * @file tests/pickban.test.ts
  * @desc Pick/ban replay: a full Bo7 to the tiebreaker, every refusal, `next` at each step, the
- *       score cut-off, custom buckets.
+ *       score cut-off, the tiebreaker next to the final score, custom buckets.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
- * @modified Tue Oct 6, 2026
+ * @modified Mon Oct 12, 2026
  */
 
 import { slotKey } from "@haruhimemoe/pool";
@@ -127,6 +127,22 @@ describe("checkPickBans", () => {
     expect(
       unwrap(checkPickBans(picks, { ...CTX, rules: { ...CTX.rules, tiebreaker: null } })).next,
     ).toBeNull();
+  });
+
+  it("takes a logged tiebreaker next to the final score of a match that went to it", () => {
+    for (const score of [
+      { a: 4, b: 3 },
+      { a: 3, b: 4 },
+    ]) {
+      expect(unwrap(checkPickBans(FULL, { ...CTX, score }))).toMatchObject({
+        tiebreaker: true,
+        next: null,
+      });
+    }
+    expect(checkPickBans(FULL, { ...CTX, score: { a: 4, b: 2 } })).toMatchObject({
+      ok: false,
+      error: { code: "bad-state" },
+    });
   });
 
   it("works with custom buckets and no slot", () => {
