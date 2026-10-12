@@ -129,8 +129,9 @@ describe("checkPickBans", () => {
     ).toBeNull();
   });
 
-  it("takes a logged tiebreaker next to the final score of a match that went to it", () => {
+  it("takes a logged tiebreaker only next to 3-3 in a Bo7, or the final score after it", () => {
     for (const score of [
+      { a: 3, b: 3 },
       { a: 4, b: 3 },
       { a: 3, b: 4 },
     ]) {
@@ -139,10 +140,16 @@ describe("checkPickBans", () => {
         next: null,
       });
     }
-    expect(checkPickBans(FULL, { ...CTX, score: { a: 4, b: 2 } })).toMatchObject({
-      ok: false,
-      error: { code: "bad-state" },
-    });
+    for (const score of [
+      { a: 5, b: 2 },
+      { a: 4, b: 2 },
+      { a: 4, b: 4 },
+    ]) {
+      expect(checkPickBans(FULL, { ...CTX, score })).toMatchObject({
+        ok: false,
+        error: { code: "bad-state" },
+      });
+    }
   });
 
   it("works with custom buckets and no slot", () => {

@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- `checkPickBans` took the tiebreaker only next to the tied score before it, so the final score of a match that went to the tiebreaker (4-3 in a best of 7) was refused.
+- `checkPickBans` took the tiebreaker only next to the tied score before it, so the final score of a match that went to the tiebreaker (4-3 in a best of 7) was refused. It now takes the tied score (3-3) or the final one after it (4-3 or 3-4), and no other.
 
 ## [0.3.0] - 2026-10-12
 

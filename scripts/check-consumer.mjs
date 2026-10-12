@@ -33,7 +33,7 @@ const tsconfig = (file) => ({
 });
 
 const CONSUMER = `import { z } from "zod";
-import { TeamSchema, createBracket, reportResult, champion, placements, checkPickBans, PickBanRulesSchema, type Bracket, type Result, type TourneyErrorCode } from "@haruhimemoe/tourney";
+import { TeamSchema, createBracket, reportResult, champion, placements, checkPickBans, PickBanRulesSchema, RosterRulesSchema, DEFAULT_ROSTER_RULES, checkRosterChange, type Bracket, type Result, type RosterRules, type TourneyErrorCode } from "@haruhimemoe/tourney";
 import { LanRegistrationSchema, allocate, type LanAllocation, type LanStatus } from "@haruhimemoe/tourney/lan";
 
 const EgcTeam = TeamSchema.extend({ region: z.string() });
@@ -51,6 +51,12 @@ if (champion(bracket) !== "a" || placements(bracket)[2]?.place !== 3) throw new 
 const rules = PickBanRulesSchema.extend({ note: z.string() }).parse({ protects: 0, bans: 0, tiebreaker: null, note: "split", phases: [{ action: "ban", count: 2, swap: false }] });
 const state = checkPickBans([], { pool: { slots: [{ mod: "NM", index: 1 }] }, rules, bestOf: 1, first: { ban: "a", pick: "b" } });
 if (!state.ok || state.value.next?.action !== "ban") throw new Error("phases");
+const EgcRoster = RosterRulesSchema.extend({ note: z.string() });
+const roster = EgcRoster.parse({ ...DEFAULT_ROSTER_RULES, lockAt: "2026-10-01T00:00:00Z", note: "subs only" });
+const change = checkRosterChange(roster, { now: new Date("2026-10-02T00:00:00Z"), changes: 0 });
+if (!change.ok || !change.value.counted || change.value.approval !== "admin" || roster.note !== "subs only") throw new Error("roster");
+// @ts-expect-error an approver is captain or admin (it would typecheck if types were any)
+const approver: RosterRules["approver"] = "host";
 // @ts-expect-error an unknown error code must not typecheck (it would if types were any)
 const bad: TourneyErrorCode = "nonsense";
 const EgcSignup = LanRegistrationSchema.extend({ editionId: z.string() });
@@ -60,7 +66,7 @@ if (!seats.ok || seats.value.roomed[0] !== signup.id || signup.editionId !== "eg
 const allocation: LanAllocation = seats.value;
 // @ts-expect-error a registration status is not a LAN status (it would typecheck if types were any)
 const lost: LanStatus = "approved";
-void [team, bad, allocation, lost];
+void [team, bad, allocation, lost, approver];
 console.log("consumer: ok");
 `;
 

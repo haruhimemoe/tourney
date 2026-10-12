@@ -108,8 +108,12 @@ export const checkPickBans = (
   const need = winsNeeded(bestOf);
   const tied = !ctx.score || (ctx.score.a === need - 1 && ctx.score.b === need - 1);
   const won = !!ctx.score && (ctx.score.a >= need || ctx.score.b >= need);
-  // The tiebreaker entry: tied before it, so a final score has every map played.
-  const tiedBefore = tied || (!!ctx.score && ctx.score.a + ctx.score.b === bestOf);
+  // The tiebreaker is only played from k-k (k = need - 1): that score, or the final k+1 to k.
+  const tiedBefore =
+    tied ||
+    (!!ctx.score &&
+      Math.max(ctx.score.a, ctx.score.b) === need &&
+      Math.min(ctx.score.a, ctx.score.b) === need - 1);
   // Entries made in each phase; `at` is the current phase once full phases are skipped.
   const made = phases.map(() => 0);
   let at = 0;
