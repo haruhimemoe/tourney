@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-12
+
 ### Added
 
 - `@haruhimemoe/tourney/api`, a new entry point with the schemas of tourney.haruhime.moe's public API v1, shared by its server and its clients. It needs no new peers. Every schema has a type to go with it (`ApiMatch` for `ApiMatchSchema`).
@@ -74,7 +76,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Tournaments with phases and a registration window; registrations with review, role conflicts and caps.
 - Scheduling through `@haruhimemoe/time` (`suggestMatchTimes`) and reschedule rules (`checkReschedule`).
 
-[unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/haruhimemoe/tourney/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/haruhimemoe/tourney/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/haruhimemoe/tourney/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/haruhimemoe/tourney/compare/v0.2.0...v0.2.1
