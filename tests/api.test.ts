@@ -106,6 +106,11 @@ const API = [
   "snakeGroups",
   "swissPairings",
   "swissRounds",
+  "DEFAULT_ROSTER_RULES",
+  "ROSTER_APPROVERS",
+  "RosterRulesSchema",
+  "checkRosterChange",
+  "forfeitWithdrawn",
 ];
 
 const MP_API = ["fromOsuMatch"];

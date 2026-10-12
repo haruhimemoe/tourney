@@ -3,7 +3,7 @@
  * @desc Registration review table, role copying, conflicts and canRegister.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
- * @modified Tue Oct 6, 2026
+ * @modified Mon Oct 12, 2026
  */
 
 import { describe, expect, it } from "vitest";
@@ -32,7 +32,7 @@ const REG: Registration = freeze({
 
 const ALLOWED: Record<RegistrationStatus, RegistrationStatus[]> = {
   pending: ["approved", "waitlisted", "rejected", "withdrawn"],
-  waitlisted: ["approved", "rejected", "withdrawn"],
+  waitlisted: ["approved", "pending", "rejected", "withdrawn"],
   approved: ["withdrawn"],
   rejected: [],
   withdrawn: [],
@@ -51,6 +51,17 @@ describe("reviewRegistration", () => {
       });
     }
   }
+
+  it("puts a waitlisted registration back to pending when a spot frees up", () => {
+    expect(reviewRegistration({ ...REG, status: "waitlisted" }, "pending")).toEqual({
+      ok: true,
+      value: { ...REG, status: "pending" },
+    });
+    expect(reviewRegistration(REG, "pending")).toMatchObject({
+      ok: false,
+      error: { code: "bad-state" },
+    });
+  });
 
   it("copies applied roles on approval only when none were set", () => {
     const approved = reviewRegistration(REG, "approved");

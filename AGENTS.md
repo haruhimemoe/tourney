@@ -24,8 +24,10 @@
 | `src/lan.ts`, `src/lan-*.ts` | The `/lan` entry (`lan.ts` re-exports only): pair codes (`lan-codes`); signup schema, attendee kinds, room shares (`lan-schema`); room groups and seating (`lan-allocate`). |
 | `src/result.ts`, `src/ids.ts` | `Result`, error codes; id, osu! id, instant and side schemas. |
 | `src/team.ts`, `src/tournament.ts` | Side rules, teams, lineups, names; tournament, phases, registration window. |
+| `src/roster.ts` | Roster rules: the lock, counted changes after it, the approver. |
 | `src/ladder.ts`, `src/seeding.ts` | Round ladders and codes; qualifier ranking, seed order. |
 | `src/bracket-wire.ts`, `src/bracket.ts`, `src/bracket-report.ts` | Match sources; bracket schema, create and settle; results, clear, champion. |
+| `src/dropouts.ts` | Forfeits for withdrawn entrants, in play order. |
 | `src/match.ts`, `src/pickban.ts`, `src/pickban-phases.ts`, `src/roll.ts` | Stored match record, score helpers; pick/ban replay; phase order; rolls. |
 | `src/placements.ts` | Standings from a bracket. |
 | `src/round-robin.ts`, `src/standings.ts`, `src/swiss.ts`, `src/groups.ts` | Group schedules; standings and tiebreaks; swiss pairing; groups to a bracket. |

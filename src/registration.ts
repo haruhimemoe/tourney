@@ -4,7 +4,7 @@
  *       someone may register now.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
- * @modified Tue Oct 6, 2026
+ * @modified Mon Oct 12, 2026
  */
 
 import { availabilitySchema } from "@haruhimemoe/time/availability";
@@ -54,9 +54,10 @@ export const RegistrationSchema = z.object({
 /** One registration. */
 export type Registration = z.infer<typeof RegistrationSchema>;
 
+// A waitlisted registration goes back to pending when a spot frees up.
 const MOVES: Record<RegistrationStatus, readonly RegistrationStatus[]> = {
   pending: ["approved", "waitlisted", "rejected", "withdrawn"],
-  waitlisted: ["approved", "rejected", "withdrawn"],
+  waitlisted: ["approved", "pending", "rejected", "withdrawn"],
   approved: ["withdrawn"],
   rejected: [],
   withdrawn: [],

@@ -4,7 +4,7 @@
  *       is @haruhimemoe/tourney/mp (src/mp.ts), so osu is only needed by apps that use it.
  * @author David @dvhsh (https://dvh.sh)
  * @created Tue Oct 6, 2026
- * @modified Tue Oct 6, 2026
+ * @modified Mon Oct 12, 2026
  */
 
 export * from "./bracket.js";
@@ -17,6 +17,7 @@ export {
   wireBracket,
 } from "./bracket-wire.js";
 export * from "./draft.js";
+export * from "./dropouts.js";
 export * from "./groups.js";
 export * from "./ids.js";
 export {
@@ -44,6 +45,7 @@ export * from "./placements.js";
 export * from "./registration.js";
 export type { Result, TourneyError, TourneyErrorCode } from "./result.js";
 export * from "./roll.js";
+export * from "./roster.js";
 export { type GroupRound, MAX_GROUP, roundRobin } from "./round-robin.js";
 export * from "./schedule.js";
 export * from "./seeding.js";

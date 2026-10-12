@@ -57,6 +57,26 @@ The bracket and matches name one **entrant** per side: in a 1v1 tourney the play
 | `teamNameKey(name)` | trimmed, collapsed, lower-case name for comparing |
 | `uniqueTeamName(name, taken)` | `name` ("Team" when blank), or `name 2`, `name 3`, cut to 32 characters |
 
+### Roster rules
+
+Until rosters lock, a captain changes the team freely. From the lock on, each change counts and needs a yes. `RosterRulesSchema` holds:
+
+- `lockAt`: when rosters lock, or null for never
+- `maxChanges`: changes a team may make from the lock on, 0 to 16
+- `approver`: who says yes to those, one of `ROSTER_APPROVERS` (`captain` or `admin`)
+
+`DEFAULT_ROSTER_RULES` (frozen) has no lock, and once you set one, allows one change after it with an admin's approval. The schema has no refinements, so `.extend()` it with your own fields.
+
+`checkRosterChange(rules, { now, changes })` says what one change needs. `changes` is how many counted changes the team has made so far.
+
+| When | Answer |
+| --- | --- |
+| no lock, or before `lockAt` | `{ counted: false, approval: "captain" }` |
+| from `lockAt` on, `changes` below `maxChanges` | `{ counted: true, approval: rules.approver }` |
+| from `lockAt` on, `changes` at `maxChanges` | `limit` |
+
+Invalid rules, a `now` that isn't a valid date, or a `changes` that isn't a whole number from 0 is `bad-input`. Keeping the count and asking the approver are up to you.
+
 ## Ladders
 
 `buildLadder({ size, format, qualifiers, bestOf, grandFinalReset? })` returns the rounds in play order: `{ code, name, side, order, bestOf }`.
@@ -92,6 +112,7 @@ Seeds are placed in standard order (1 and 2 can only meet in the final). In doub
 | --- | --- |
 | `reportResult(bracket, code, { scoreA, scoreB })` | a `ready` match; the winner must reach `ceil(bestOf / 2)` |
 | `reportForfeit(bracket, code, winner)` | a `ready` match, decided without scores |
+| `forfeitWithdrawn(bracket, withdrawn)` | forfeits every `ready` match a withdrawn entrant is in to the other side (side a when both withdrew), in play order, and returns `{ bracket, forfeited }`. A match still waiting for its other side is left alone, so call it again after each result |
 | `clearResult(bracket, code)` | undoes a result; refused while a later match fed by it (directly or through byes) has one |
 | `champion(bracket)` | the winner of the last final played, else null |
 | `placements(bracket)` | `{ entrantId, place }` for every entrant; see below |
@@ -268,7 +289,7 @@ Phases run `setup`, `registration`, `qualifiers`, `draft`, `bracket`, `done`. `a
 | --- | --- |
 | `isRegistrationOpen(tournament, now)` | in the registration phase and window |
 | `canRegister(tournament, kind, counts, now)` | window open and cap not reached |
-| `reviewRegistration(registration, to)` | pending to approved, waitlisted, rejected or withdrawn; waitlisted to approved, rejected or withdrawn; approved to withdrawn. Approving staff with no approved roles copies the applied ones |
+| `reviewRegistration(registration, to)` | pending to approved, waitlisted, rejected or withdrawn; waitlisted to pending (a spot freed up), approved, rejected or withdrawn; approved to withdrawn. Approving staff with no approved roles copies the applied ones |
 | `checkRoleConflicts(registrations, conflicts?)` | clashing role pairs one person holds; by default playing clashes with `mappooler` and `playtester` |
 
 ## Scheduling

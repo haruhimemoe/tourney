@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Roster rules: `RosterRulesSchema` (extendable) with `lockAt`, `maxChanges` and `approver` (one of `ROSTER_APPROVERS`: `captain` or `admin`), and `DEFAULT_ROSTER_RULES` (frozen: no lock, then one change approved by an admin). `checkRosterChange` says whether a change counts against the limit and who approves it: free and up to the captain before the lock, counted and up to the approver from the lock on, `limit` once the changes are used.
+- `forfeitWithdrawn`: forfeits every ready match a withdrawn entrant is in to the other side, in play order, including the matches those forfeits fill (a losers bracket drop, a grand final reset). A match still waiting for its other side is forfeited by a later call, once that side is known.
+
+### Changed
+
+- `reviewRegistration` moves a waitlisted registration to pending, for when a spot frees up.
+
 ## [0.3.0] - 2026-10-12
 
 ### Added
