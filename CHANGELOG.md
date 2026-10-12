@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-12
+
 ### Added
 
 - Roster rules: `RosterRulesSchema` (extendable) with `lockAt`, `maxChanges` and `approver` (one of `ROSTER_APPROVERS`: `captain` or `admin`), and `DEFAULT_ROSTER_RULES` (frozen: no lock, then one change approved by an admin). `checkRosterChange` says whether a change counts against the limit and who approves it: free and up to the captain before the lock, counted and up to the approver from the lock on, `limit` once the changes are used.
@@ -65,7 +67,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Tournaments with phases and a registration window; registrations with review, role conflicts and caps.
 - Scheduling through `@haruhimemoe/time` (`suggestMatchTimes`) and reschedule rules (`checkReschedule`).
 
-[unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/haruhimemoe/tourney/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/haruhimemoe/tourney/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/haruhimemoe/tourney/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/haruhimemoe/tourney/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/haruhimemoe/tourney/compare/v0.1.0...v0.2.0
